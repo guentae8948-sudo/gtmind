@@ -1,0 +1,1335 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#eef0f4">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="마인드맵">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<title>마인드맵</title>
+<style>
+:root{--ac:#3b82f6;--bd:#e3e6ec;--tx:#1d2433;--mut:#6b7385;--bg:#f6f7f9;--font:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR","Segoe UI",sans-serif}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;font-family:var(--font);color:var(--tx);background:#fff;-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit;cursor:pointer}
+#app{display:flex;flex-direction:column;height:100%}
+#tabs{display:flex;align-items:center;gap:4px;padding:6px 8px 0;background:#eef0f4;border-bottom:1px solid var(--bd);min-height:40px}
+#tablist{display:flex;gap:4px;overflow-x:auto;flex:1;scrollbar-width:none}
+#tablist::-webkit-scrollbar{display:none}
+.tab{border:1px solid transparent;border-bottom:none;background:transparent;padding:7px 12px;border-radius:8px 8px 0 0;font-size:13px;white-space:nowrap;max-width:180px;overflow:hidden;text-overflow:ellipsis;color:var(--mut)}
+.tab.on{background:#fff;border-color:var(--bd);color:var(--tx);font-weight:600;position:relative;top:1px}
+.tab.on2{color:var(--ac)}
+.tab.on2::before{content:"◧ ";font-size:11px}
+.tab.add{font-size:16px;padding:4px 10px;color:var(--mut)}
+#sync{font-size:11px;color:var(--mut);white-space:nowrap;padding:0 4px 6px}
+#toolbar{display:flex;align-items:center;gap:2px;padding:5px 6px;border-bottom:1px solid var(--bd);overflow-x:auto;background:#fff;scrollbar-width:none;flex-shrink:0}
+#toolbar::-webkit-scrollbar{display:none}
+.tb{border:1px solid transparent;background:transparent;border-radius:7px;padding:6px 9px;font-size:13px;white-space:nowrap;display:flex;align-items:center;gap:4px;flex-shrink:0}
+.tb:hover{background:#f1f3f6}
+.tb[aria-pressed="true"]{background:#e7efff;color:#1d4ed8;border-color:#c9dafc}
+.tb:disabled{opacity:.35;cursor:default}
+.tb .k{font-size:10px;color:var(--mut);border:1px solid var(--bd);border-radius:4px;padding:0 3px}
+.sep{width:1px;height:22px;background:var(--bd);margin:0 4px;flex-shrink:0}
+#layoutSel{font:inherit;font-size:13px;border:1px solid var(--bd);border-radius:7px;padding:5px 6px;background:#fff;flex-shrink:0}
+#fsLabel{font-size:12px;min-width:38px;text-align:center;color:var(--mut);flex-shrink:0}
+#main{flex:1;display:flex;min-height:0;position:relative}
+#panes{flex:1;display:flex;min-width:0}
+.pane{flex:1;position:relative;overflow:hidden;background-color:var(--bg);background-image:radial-gradient(#d9dde5 1px,transparent 1px);background-size:22px 22px;min-width:0;min-height:0}
+.pane+.pane{border-left:1px solid var(--bd)}
+#panes.split .pane.focus{box-shadow:inset 0 0 0 2px var(--ac)}
+.canvas{width:100%;height:100%;display:block;touch-action:none;user-select:none;-webkit-user-select:none}
+.node{cursor:pointer}
+.pane-label{position:absolute;left:10px;top:8px;font-size:12px;background:rgba(255,255,255,.9);border:1px solid var(--bd);border-radius:6px;padding:3px 8px;display:none;pointer-events:none;z-index:2}
+#panes.split .pane-label{display:block}
+.zoombar{position:absolute;left:10px;bottom:10px;display:flex;align-items:center;background:#fff;border:1px solid var(--bd);border-radius:9px;box-shadow:0 1px 4px rgba(0,0,0,.06);z-index:2}
+.zoombar button{border:none;background:none;padding:6px 10px;font-size:14px}
+.zoombar .zl{font-size:11px;color:var(--mut);min-width:40px;text-align:center}
+.mini{position:absolute;right:10px;bottom:10px;width:180px;height:120px;background:rgba(255,255,255,.92);border:1px solid var(--bd);border-radius:9px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08);z-index:2;touch-action:none}
+.mini svg{width:100%;height:100%;display:block}
+.nomini .mini{display:none}
+#panel{width:310px;border-left:1px solid var(--bd);background:#fff;overflow-y:auto;padding:12px 14px 30px;display:none;flex-shrink:0}
+#panel.open{display:block}
+#panel .ph{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+#panel .ph b{font-size:14px}
+#panel label{display:block;font-size:12px;font-weight:600;color:#3d4556;margin:12px 0 5px}
+#panel textarea,#panel input[type=text],#panel input:not([type]){width:100%;font:inherit;font-size:14px;border:1px solid var(--bd);border-radius:8px;padding:7px 9px;resize:vertical}
+#panel textarea:focus,#panel input:focus{outline:2px solid #bfd3fb;border-color:var(--ac)}
+.row{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.btn{border:1px solid var(--bd);background:#fff;border-radius:8px;padding:6px 10px;font-size:13px}
+.btn:hover{background:#f4f6f9}
+.btn.danger{color:#c92a2a;border-color:#f3c4c4}
+.btn.primary{background:var(--ac);color:#fff;border-color:var(--ac)}
+.muted{color:var(--mut);font-size:12px;font-weight:400}
+#pColors{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.sw{width:24px;height:24px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px var(--bd);padding:0}
+.sw.on{box-shadow:0 0 0 2px var(--tx)}
+.sw.auto{background:conic-gradient(#e8590c,#f59f00,#2f9e44,#1c7ed6,#ae3ec9,#e8590c);}
+#pColorCustom{width:28px;height:26px;border:none;padding:0;background:none}
+.file-item{display:flex;align-items:center;gap:6px;font-size:13px;padding:4px 0;border-bottom:1px dashed var(--bd)}
+.file-item span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chk{display:flex!important;align-items:center;gap:6px}
+#pImgThumb{max-width:100%;max-height:120px;border-radius:6px;display:none;margin-top:6px}
+#pLinkOpen{font-size:13px;color:var(--ac);white-space:nowrap}
+#editor{position:fixed;display:none;z-index:50;border:2px solid var(--ac);border-radius:8px;padding:4px 8px;resize:none;text-align:center;background:#fff;font-family:var(--font);line-height:1.35;box-shadow:0 4px 16px rgba(0,0,0,.15);overflow:hidden}
+#modal{position:fixed;inset:0;background:rgba(20,24,33,.38);display:none;align-items:center;justify-content:center;z-index:100;padding:16px}
+#modal.open{display:flex}
+#modal .box{background:#fff;border-radius:14px;padding:18px;width:100%;max-width:420px;max-height:86vh;overflow:auto;box-shadow:0 10px 40px rgba(0,0,0,.2)}
+#modal h3{margin:0 0 12px;font-size:16px}
+#modal .menu button{display:block;width:100%;text-align:left;border:none;background:none;padding:11px 8px;border-radius:8px;font-size:14px}
+#modal .menu button:hover{background:#f2f4f7}
+#modal .menu .hd{font-size:11px;color:var(--mut);padding:10px 8px 2px;font-weight:600}
+#modal input,#modal textarea{width:100%;font:inherit;font-size:15px;border:1px solid var(--bd);border-radius:8px;padding:8px 10px}
+#modal .acts{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}
+#modal table{font-size:13px;border-collapse:collapse;width:100%}
+#modal td{padding:5px 4px;border-bottom:1px solid #f0f1f4}
+#modal td:first-child{white-space:nowrap;font-family:ui-monospace,monospace;font-size:12px;color:#384152}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#1f2633;color:#fff;padding:9px 16px;border-radius:20px;font-size:13px;z-index:200;opacity:0;transition:opacity .2s;pointer-events:none;max-width:90vw;text-align:center}
+#toast.show{opacity:1}
+#tabs{padding-top:calc(6px + env(safe-area-inset-top));padding-left:calc(8px + env(safe-area-inset-left));padding-right:calc(8px + env(safe-area-inset-right))}
+#app{padding-bottom:env(safe-area-inset-bottom)}
+#panel{padding-bottom:calc(30px + env(safe-area-inset-bottom))}
+@media (max-width:760px){
+  .tb .k{display:none}
+  #panes.split{flex-direction:column}
+  .pane+.pane{border-left:none;border-top:1px solid var(--bd)}
+  .mini{width:120px;height:82px}
+  #panel{position:fixed;left:0;right:0;bottom:0;width:auto;max-height:58vh;border-left:none;border-top:1px solid var(--bd);border-radius:16px 16px 0 0;box-shadow:0 -8px 30px rgba(0,0,0,.15);z-index:30}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="tabs"><div id="tablist"></div><span id="sync">기기 저장</span></div>
+  <div id="toolbar">
+    <button class="tb" data-act="child" title="자식 추가 (Tab)">＋ 자식 <span class="k">Tab</span></button>
+    <button class="tb" data-act="sibling" title="형제 추가 (Enter)">＋ 형제 <span class="k">Enter</span></button>
+    <button class="tb" data-act="edit" title="편집 (F2 / 더블탭)">✎ 편집</button>
+    <button class="tb" data-act="del" title="삭제 (Delete)">🗑 삭제</button>
+    <span class="sep"></span>
+    <button class="tb" data-act="undo" title="실행 취소 (Ctrl+Z)">↶</button>
+    <button class="tb" data-act="redo" title="다시 실행 (Ctrl+Shift+Z)">↷</button>
+    <span class="sep"></span>
+    <select id="layoutSel" title="레이아웃">
+      <option value="right">→ 오른쪽</option>
+      <option value="left">← 왼쪽</option>
+      <option value="balanced">⇆ 양쪽 균형</option>
+      <option value="org">⊤ 조직도</option>
+      <option value="logic">⊢ 로직 트리</option>
+    </select>
+    <span class="sep"></span>
+    <button class="tb" data-act="fontDown" title="전체 글씨 작게">A−</button>
+    <span id="fsLabel">100%</span>
+    <button class="tb" data-act="fontUp" title="전체 글씨 크게">A+</button>
+    <button class="tb" data-act="notes" title="주제 아래에 설명(노트) 표시">📝 설명 보기</button>
+    <span class="sep"></span>
+    <button class="tb" data-act="rel" title="관계선: 시작 주제 선택 후 누르고 대상 탭">↝ 관계선</button>
+    <button class="tb" data-act="group" title="선택 주제와 하위를 그룹으로 묶기">▢ 그룹</button>
+    <button class="tb" data-act="collapse" title="하위 접기/펼치기">⊖ 접기</button>
+    <span class="sep"></span>
+    <button class="tb" data-act="mini" title="미니맵">🗺 미니맵</button>
+    <button class="tb" data-act="split" title="2분할 보기">◧ 2분할</button>
+    <button class="tb" data-act="panel" title="속성 패널 (노트·색상·첨부)">☰ 속성</button>
+    <button class="tb" data-act="menu" title="내보내기 / 가져오기">⋯ 메뉴</button>
+  </div>
+  <div id="main">
+    <div id="panes"></div>
+    <aside id="panel">
+      <div class="ph"><b id="pTitle">속성</b><button class="btn" data-act="panel">닫기</button></div>
+      <div id="pEmpty" class="muted">주제를 탭해서 선택하세요.</div>
+      <div id="pNodeSec">
+        <label>주제</label>
+        <textarea id="pText" rows="2"></textarea>
+        <label>설명(노트) <span class="muted">— 맵에서 주제 아래에 표시돼요</span></label>
+        <textarea id="pNote" rows="4" placeholder="설명을 입력하세요"></textarea>
+        <label>색상</label>
+        <div id="pColors"></div>
+        <label>이 주제 글씨 크기</label>
+        <div class="row"><button class="btn" id="pFsDown">A−</button><span id="pFs" class="muted">100%</span><button class="btn" id="pFsUp">A+</button><button class="btn" id="pFsReset">기본값</button></div>
+        <label>링크</label>
+        <div class="row" style="flex-wrap:nowrap"><input id="pLink" type="text" placeholder="https://…"><a id="pLinkOpen" target="_blank" rel="noopener">열기</a></div>
+        <label>이미지</label>
+        <div class="row"><button class="btn" id="pImgAdd">이미지 추가</button><button class="btn danger" id="pImgDel">제거</button></div>
+        <img id="pImgThumb" alt="">
+        <label>첨부 파일</label>
+        <div id="pFiles"></div>
+        <div class="row" style="margin-top:6px"><button class="btn" id="pFileAdd">＋ 파일 첨부</button></div>
+        <label class="chk"><input type="checkbox" id="pGroup"> 노드 그룹 (이 주제 + 하위를 묶음)</label>
+        <input id="pGroupLabel" type="text" placeholder="그룹 이름 (선택)">
+        <div class="row" style="margin-top:16px"><button class="btn" id="pCollapse">접기/펼치기</button><button class="btn danger" id="pDelete">주제 삭제</button></div>
+      </div>
+      <div id="pRelSec">
+        <label>관계선 라벨</label>
+        <input id="pRelLabel" type="text" placeholder="예: 원인, 비교, 참고">
+        <div class="row" style="margin-top:10px"><button class="btn" id="pRelFlip">방향 바꾸기</button><button class="btn danger" id="pRelDel">관계선 삭제</button></div>
+      </div>
+    </aside>
+  </div>
+</div>
+<textarea id="editor" spellcheck="false"></textarea>
+<div id="modal"><div class="box" id="modalBox"></div></div>
+<div id="toast"></div>
+<input type="file" id="fImg" accept="image/*" hidden>
+<input type="file" id="fFile" hidden>
+<input type="file" id="fImport" accept=".xmind,.json,application/json" hidden>
+
+<script>
+'use strict';
+/* ================= 기본 상수 / 유틸 ================= */
+const FONT = `-apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", "Segoe UI", sans-serif`;
+const PALETTE = ['#e8590c','#1c7ed6','#2f9e44','#ae3ec9','#f59f00','#0ca678','#d6336c','#4263eb','#74b816','#495057'];
+const ROOT_COLOR = '#2b3a55';
+const LAYOUT_NAMES = {right:'오른쪽', left:'왼쪽', balanced:'양쪽 균형', org:'조직도', logic:'로직 트리'};
+const CLOUD_MAX = 240000;
+const $ = s => document.querySelector(s);
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const r1 = v => Math.round(v * 10) / 10;
+function hexRgb(h){ h = (h || '#888').replace('#',''); if (h.length === 3) h = h.split('').map(c => c + c).join(''); const n = parseInt(h, 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
+function tint(hex, a){ const [r,g,b] = hexRgb(hex); const f = v => Math.round(v + (255 - v) * a); return `rgb(${f(r)},${f(g)},${f(b)})`; }
+function lum(hex){ const [r,g,b] = hexRgb(hex); return (0.299*r + 0.587*g + 0.114*b) / 255; }
+function toast(msg, ms = 2200){ const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('show'), ms); }
+function fmtSize(n){ return n > 1048576 ? (n/1048576).toFixed(1) + 'MB' : Math.max(1, Math.round(n/1024)) + 'KB'; }
+
+/* ================= 상태 ================= */
+const S = { maps:{}, order:[], deleted:[], active:null, pane2:null, focus:0,
+  settings:{ fontScale:1, showNotes:true, minimap:true, split:false, panel:false } };
+const hist = {};
+const dirty = new Set(), delPending = new Set(), attPending = new Set();
+let indexDirty = false;
+const attCache = {}, attLoading = new Set();
+let relMode = null;
+
+function newNode(text){ return { id: uid(), text: text ?? '', children: [] }; }
+function newMap(name){ const root = newNode(name || '중심 주제'); return { id: uid(), name: name || '새 마인드맵', root, relations: [], layout: 'balanced', updatedAt: Date.now() }; }
+function sampleMap(){
+  const m = newMap('시작하기'); m.root.text = '마인드맵 사용법'; m._sample = true;
+  const mk = (t, note, kids) => { const n = newNode(t); if (note) n.note = note; (kids || []).forEach(k => n.children.push(k)); return n; };
+  m.root.children = [
+    mk('빠른 편집', '주제를 선택한 뒤 키보드만으로 구조를 만들 수 있어요.', [mk('Tab → 자식 추가'), mk('Enter → 형제 추가'), mk('F2 · 더블탭 → 편집'), mk('Shift+Enter → 줄바꿈')]),
+    mk('드래그로 이동', '선택된 주제를 끌어서 다른 주제의 위/아래(형제) 또는 가운데(자식)에 놓으세요. 하위 주제도 함께 이동해요.'),
+    mk('설명(노트)', '이렇게 설명을 적으면 주제 아래에 보여요. 상단 “📝 설명 보기”로 켜고 끌 수 있어요.'),
+    mk('레이아웃 · 글씨 크기', null, [mk('오른쪽 / 왼쪽 / 양쪽'), mk('조직도 / 로직 트리'), mk('A− / A+ 로 전체 글씨 조절')]),
+    mk('저장 & 내보내기', '자동 저장돼요. ⋯ 메뉴에서 Markdown · PNG · Excel · JSON 내보내기와 XMind 가져오기를 할 수 있어요.')
+  ];
+  m.relations.push({ id: uid(), from: m.root.children[0].id, to: m.root.children[1].id, label: '함께 쓰기' });
+  return m;
+}
+
+/* 인덱스 */
+const idxCache = new WeakMap();
+function getIndex(map){
+  const c = idxCache.get(map); if (c && c.v === map._v && c.root === map.root) return c.m;
+  const m = new Map();
+  (function walk(n, p, d){ m.set(n.id, { n, p, d }); for (const ch of n.children) walk(ch, n, d + 1); })(map.root, null, 0);
+  idxCache.set(map, { v: map._v, root: map.root, m }); return m;
+}
+function countDesc(n){ let c = 0; for (const k of n.children) c += 1 + countDesc(k); return c; }
+function subtreeIds(n, set = new Set()){ set.add(n.id); n.children.forEach(k => subtreeIds(k, set)); return set; }
+
+/* 히스토리 / 변경 */
+function snap(map){ return JSON.stringify({ root: map.root, relations: map.relations, layout: map.layout }); }
+function pushUndo(map){ const h = hist[map.id] || (hist[map.id] = { u: [], r: [] }); h.u.push(snap(map)); if (h.u.length > 150) h.u.shift(); h.r.length = 0; }
+function touch(map){ map.updatedAt = Date.now(); map._v = (map._v || 0) + 1; if (map._sample){ delete map._sample; indexDirty = true; } dirty.add(map.id); scheduleSave(); }
+function mutate(map, fn){ pushUndo(map); fn(); touch(map); renderAll(); }
+function undo(){ const p = fp(), map = curMap(p); const h = map && hist[map.id]; if (!h || !h.u.length) return; h.r.push(snap(map)); Object.assign(map, JSON.parse(h.u.pop())); touch(map); renderAll(); }
+function redo(){ const p = fp(), map = curMap(p); const h = map && hist[map.id]; if (!h || !h.r.length) return; h.u.push(snap(map)); Object.assign(map, JSON.parse(h.r.pop())); touch(map); renderAll(); }
+
+/* ================= 텍스트 측정 / 레이아웃 ================= */
+const mctx = document.createElement('canvas').getContext('2d');
+const mcache = new Map();
+function wrap(text, font, maxW){
+  mctx.font = font; const out = [];
+  for (const para of String(text).split('\n')){
+    if (para === ''){ out.push(''); continue; }
+    let line = '';
+    for (const ch of para){
+      const t = line + ch;
+      if (line.length && mctx.measureText(t).width > maxW){
+        if (ch === ' '){ out.push(line); line = ''; continue; }
+        const sp = line.lastIndexOf(' ');
+        if (sp > 0){ out.push(line.slice(0, sp)); line = line.slice(sp + 1) + ch; }
+        else { out.push(line); line = ch; }
+      } else line = t;
+    }
+    out.push(line);
+  }
+  return out;
+}
+function lineW(lines, font){ mctx.font = font; let w = 0; for (const l of lines) w = Math.max(w, mctx.measureText(l).width); return w; }
+function metrics(n, d){
+  const sc = S.settings.fontScale * (n.fs || 1);
+  const fs = (d === 0 ? 20 : d === 1 ? 16 : 14) * sc;
+  const nfs = Math.max(10, fs * 0.78);
+  const showNote = S.settings.showNotes && n.note && n.note.trim();
+  const badges = [];
+  if (n.link) badges.push('link');
+  if (n.files && n.files.length) badges.push('file');
+  if (n.note && n.note.trim() && !S.settings.showNotes) badges.push('note');
+  const key = [n.text, fs, d > 1 ? 2 : d, showNote ? n.note : '', n.img ? n.img.w + 'x' + n.img.h : '', badges.join(','), (n.files || []).length].join('\u0001');
+  const c = mcache.get(key); if (c) return c;
+  if (mcache.size > 4000) mcache.clear();
+  const weight = d === 0 ? 700 : d === 1 ? 600 : 400;
+  const font = `${weight} ${fs}px ${FONT}`;
+  const maxW = fs * 17;
+  const lines = wrap(n.text || '', font, maxW);
+  let tw = lineW(lines, font); if (!n.text) tw = fs * 2;
+  const lh = fs * 1.35;
+  const bfs = fs * 0.82;
+  let bw = 0; if (badges.length){ bw = badges.length * bfs * 1.35 + ((n.files||[]).length > 1 ? bfs * 0.7 : 0) + fs * 0.4; }
+  const padX = d === 0 ? fs * 0.9 : fs * 0.72, padY = d === 0 ? fs * 0.62 : fs * 0.45;
+  let img = null; if (n.img && n.img.w){ const w = Math.min(n.img.w, fs * 14); img = { w, h: w * n.img.h / n.img.w }; }
+  let noteLines = [], nw = 0, nlh = nfs * 1.42;
+  const nfont = `400 ${nfs}px ${FONT}`;
+  if (showNote){ noteLines = wrap(n.note.trim(), nfont, Math.max(maxW * 0.95, tw)); nw = lineW(noteLines, nfont); }
+  const contentW = tw + bw;
+  const innerW = Math.max(contentW, img ? img.w : 0, nw, fs * 1.5);
+  const h = padY * 2 + (img ? img.h + fs * 0.4 : 0) + lines.length * lh + (showNote ? fs * 0.55 + noteLines.length * nlh : 0);
+  const m = { fs, nfs, weight, lines, tw, lh, bw, bfs, badges, padX, padY, img, noteLines, nlh, contentW, innerW,
+    w: innerW + padX * 2, h, rx: d === 0 ? fs * 0.7 : fs * 0.45 };
+  mcache.set(key, m); return m;
+}
+function layoutMap(map){
+  const L = new Map(); const mode = map.layout || 'balanced';
+  const sc = clamp(S.settings.fontScale, 0.7, 1.7);
+  let rootIdx = 0;
+  function prep(n, d, p){
+    const m = metrics(n, d);
+    let color;
+    if (d === 0) color = n.color || ROOT_COLOR;
+    else if (d === 1) color = n.color || PALETTE[rootIdx++ % PALETTE.length];
+    else color = n.color || p.color;
+    const b = { n, p, d, m, w: m.w, h: m.h, color, kids: [] };
+    L.set(n.id, b);
+    if (!n.collapsed || d === 0) b.kids = n.children.map(c => prep(c, d + 1, b));
+    return b;
+  }
+  const root = prep(map.root, 0, null);
+  if (mode === 'org'){
+    const HG = 20 * sc, VG = 48 * sc; const lh = [];
+    for (const b of L.values()) lh[b.d] = Math.max(lh[b.d] || 0, b.h);
+    const ly = [0]; for (let d = 1; d < lh.length; d++) ly[d] = ly[d-1] + lh[d-1] + VG;
+    const sw = b => { const t = b.kids.length ? b.kids.reduce((a, k) => a + sw(k), 0) + HG * (b.kids.length - 1) : 0; return b.sw = Math.max(b.w, t); };
+    const pl = (b, left) => { b.side = 2; b.x = left + (b.sw - b.w) / 2; b.y = ly[b.d] - root.h / 2; const t = b.kids.reduce((a, k) => a + k.sw, 0) + HG * (b.kids.length - 1); let x = left + (b.sw - t) / 2; for (const k of b.kids){ pl(k, x); x += k.sw + HG; } };
+    sw(root); pl(root, -root.sw / 2); root.side = 0;
+    L.levelGap = VG; return L;
+  }
+  const HG = (mode === 'logic' ? 38 : 46) * sc, VG = 12 * sc;
+  const sh = b => { if (b.sh != null) return b.sh; if (!b.kids.length) return b.sh = b.h; const t = b.kids.reduce((a, k) => a + sh(k), 0) + VG * (b.kids.length - 1); return b.sh = Math.max(b.h, t); };
+  const place = (b, x, top, side) => { b.side = side; b.x = x; b.y = top + (b.sh - b.h) / 2; if (!b.kids.length) return; const tot = b.kids.reduce((a, k) => a + k.sh, 0) + VG * (b.kids.length - 1); let y = top + (b.sh - tot) / 2; for (const k of b.kids){ place(k, side > 0 ? b.x + b.w + HG : b.x - HG - k.w, y, side); y += k.sh + VG; } };
+  root.x = -root.w / 2; root.y = -root.h / 2; root.side = 0;
+  root.kids.forEach(sh);
+  let R = [], Lf = [];
+  if (mode === 'left') Lf = root.kids.slice();
+  else if (mode === 'balanced'){
+    const total = root.kids.reduce((a, k) => a + k.sh, 0);
+    let hR = 0;
+    for (const k of root.kids){
+      if (k.n.side === 'L') Lf.push(k);
+      else if (k.n.side === 'R'){ R.push(k); hR += k.sh; }
+      else if (hR < total / 2 || !R.length){ R.push(k); hR += k.sh; }
+      else Lf.push(k);
+    }
+  } else R = root.kids.slice();
+  const grp = (list, side) => { const tot = list.reduce((a, k) => a + k.sh, 0) + VG * Math.max(0, list.length - 1); let y = -tot / 2; for (const k of list){ place(k, side > 0 ? root.x + root.w + HG : root.x - HG - k.w, y, side); y += k.sh + VG; } };
+  grp(R, 1); grp(Lf, -1);
+  return L;
+}
+function subBox(b){ let x0 = b.x, y0 = b.y, x1 = b.x + b.w, y1 = b.y + b.h; for (const k of b.kids){ const s = subBox(k); x0 = Math.min(x0, s.x0); y0 = Math.min(y0, s.y0); x1 = Math.max(x1, s.x1); y1 = Math.max(y1, s.y1); } return { x0, y0, x1, y1 }; }
+function bounds(L){ let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity; for (const b of L.values()){ x0 = Math.min(x0, b.x); y0 = Math.min(y0, b.y); x1 = Math.max(x1, b.x + b.w); y1 = Math.max(y1, b.y + b.h); } if (!isFinite(x0)) return { x: -100, y: -50, w: 200, h: 100 }; const m = 36; return { x: x0 - m, y: y0 - m, w: x1 - x0 + m * 2, h: y1 - y0 + m * 2 }; }
+
+/* ================= SVG 그리기 ================= */
+function connPath(b, mode){
+  const P = b.p;
+  if (mode === 'org'){ const x1 = P.x + P.w / 2, y1 = P.y + P.h, x2 = b.x + b.w / 2, y2 = b.y, my = y1 + (y2 - y1) / 2; return `M${r1(x1)} ${r1(y1)}V${r1(my)}H${r1(x2)}V${r1(y2)}`; }
+  const s = b.side, y1 = P.y + P.h / 2, y2 = b.y + b.h / 2;
+  const x1 = s > 0 ? P.x + P.w : P.x, x2 = s > 0 ? b.x : b.x + b.w;
+  if (mode === 'logic'){ const mx = x1 + (x2 - x1) / 2; return `M${r1(x1)} ${r1(y1)}H${r1(mx)}V${r1(y2)}H${r1(x2)}`; }
+  const dx = (x2 - x1) / 2;
+  return `M${r1(x1)} ${r1(y1)}C${r1(x1 + dx)} ${r1(y1)} ${r1(x2 - dx)} ${r1(y2)} ${r1(x2)} ${r1(y2)}`;
+}
+function nodeSVG(b, sel, dim, forExport){
+  const n = b.n, m = b.m, isRoot = b.d === 0;
+  const fill = isRoot ? b.color : tint(b.color, b.d === 1 ? 0.84 : 0.92);
+  const tcol = isRoot ? (lum(b.color) > 0.62 ? '#1d2433' : '#fff') : '#1d2433';
+  const ncol = isRoot ? (lum(b.color) > 0.62 ? '#4b5466' : 'rgba(255,255,255,.82)') : '#545d6e';
+  let s = `<g class="node" data-id="${n.id}" transform="translate(${r1(b.x)},${r1(b.y)})"${dim ? ' opacity=".3"' : ''}>`;
+  if (sel) s += `<rect x="-4" y="-4" width="${r1(b.w + 8)}" height="${r1(b.h + 8)}" rx="${r1(m.rx + 4)}" fill="none" stroke="#3b82f6" stroke-width="2.5"/>`;
+  s += `<rect width="${r1(b.w)}" height="${r1(b.h)}" rx="${r1(m.rx)}" fill="${fill}"${isRoot ? '' : ` stroke="${b.color}" stroke-width="${b.d === 1 ? 1.6 : 1.1}"`}/>`;
+  let y = m.padY;
+  if (m.img){
+    const a = attCache[n.img.att];
+    const ix = (b.w - m.img.w) / 2;
+    if (a && a.data) s += `<image href="${a.data}" x="${r1(ix)}" y="${r1(y)}" width="${r1(m.img.w)}" height="${r1(m.img.h)}" preserveAspectRatio="xMidYMid meet"/>`;
+    else { s += `<rect x="${r1(ix)}" y="${r1(y)}" width="${r1(m.img.w)}" height="${r1(m.img.h)}" rx="4" fill="#e9ecf1"/>`; if (!forExport) requestAtt(n.img.att); }
+    y += m.img.h + m.fs * 0.4;
+  }
+  const off = m.padX + (m.innerW - m.contentW) / 2;
+  const cx = off + m.tw / 2;
+  s += `<text font-size="${r1(m.fs)}" font-weight="${m.weight}" fill="${tcol}" text-anchor="middle" font-family='${FONT}'>`;
+  m.lines.forEach((l, i) => { s += `<tspan x="${r1(cx)}" y="${r1(y + i * m.lh + (m.lh - m.fs) / 2 + m.fs * 0.83)}">${l === '' ? '​' : esc(l)}</tspan>`; });
+  s += `</text>`;
+  if (m.badges.length){
+    let bx = off + m.tw + m.fs * 0.4; const by = y + (m.lh - m.fs) / 2 + m.fs * 0.83;
+    for (const k of m.badges){
+      if (k === 'link'){
+        const t = `<text x="${r1(bx)}" y="${r1(by)}" font-size="${r1(m.bfs)}">🔗</text>`;
+        s += forExport ? t : `<a href="${esc(n.link)}" target="_blank" rel="noopener" data-link="1"><rect x="${r1(bx - 3)}" y="${r1(by - m.bfs)}" width="${r1(m.bfs * 1.4)}" height="${r1(m.bfs * 1.3)}" fill="transparent"/>${t}</a>`;
+        bx += m.bfs * 1.35;
+      } else if (k === 'file'){
+        const c = n.files.length;
+        s += `<text x="${r1(bx)}" y="${r1(by)}" font-size="${r1(m.bfs)}" data-badge="files">📎${c > 1 ? `<tspan font-size="${r1(m.bfs * 0.75)}" fill="${tcol}">${c}</tspan>` : ''}</text>`;
+        bx += m.bfs * 1.35 + (c > 1 ? m.bfs * 0.7 : 0);
+      } else { s += `<text x="${r1(bx)}" y="${r1(by)}" font-size="${r1(m.bfs)}" data-badge="note">📝</text>`; bx += m.bfs * 1.35; }
+    }
+  }
+  if (m.noteLines.length){
+    y += m.lines.length * m.lh + m.fs * 0.28;
+    s += `<line x1="${r1(m.padX)}" x2="${r1(b.w - m.padX)}" y1="${r1(y)}" y2="${r1(y)}" stroke="${isRoot ? 'rgba(255,255,255,.35)' : b.color}" stroke-opacity="${isRoot ? 1 : 0.35}" stroke-dasharray="3 3"/>`;
+    y += m.fs * 0.27;
+    s += `<text font-size="${r1(m.nfs)}" fill="${ncol}" font-family='${FONT}'>`;
+    m.noteLines.forEach((l, i) => { s += `<tspan x="${r1(m.padX)}" y="${r1(y + i * m.nlh + (m.nlh - m.nfs) / 2 + m.nfs * 0.83)}">${l === '' ? '​' : esc(l)}</tspan>`; });
+    s += `</text>`;
+  }
+  if (!isRoot && n.children.length && !forExport){
+    const side = b.side;
+    const [tx, ty] = side === 2 ? [b.w / 2, b.h + 10] : side > 0 ? [b.w + 10, b.h / 2] : [-10, b.h / 2];
+    if (n.collapsed){
+      const cnt = countDesc(n); const rr = cnt > 99 ? 12 : 10;
+      s += `<g data-toggle="${n.id}" transform="translate(${r1(tx)},${r1(ty)})"><circle r="${rr + 6}" fill="transparent"/><circle r="${rr}" fill="#fff" stroke="${b.color}" stroke-width="1.6"/><text text-anchor="middle" y="3.8" font-size="${cnt > 99 ? 9 : 10.5}" font-weight="700" fill="${b.color}" font-family='${FONT}'>${cnt}</text></g>`;
+    } else if (sel){
+      s += `<g data-toggle="${n.id}" transform="translate(${r1(tx)},${r1(ty)})"><circle r="15" fill="transparent"/><circle r="8.5" fill="#fff" stroke="${b.color}" stroke-width="1.6"/><path d="M-4 0H4" stroke="${b.color}" stroke-width="1.8"/></g>`;
+    }
+  }
+  return s + '</g>';
+}
+function visibleBox(L, idx, id){ let info = idx.get(id); while (info){ const b = L.get(info.n.id); if (b) return b; info = info.p ? idx.get(info.p.id) : null; } return null; }
+function edgePt(b, tx, ty){ const cx = b.x + b.w / 2, cy = b.y + b.h / 2; const dx = tx - cx, dy = ty - cy; if (!dx && !dy) return [cx, cy]; const t = Math.min(dx ? (b.w / 2 + 3) / Math.abs(dx) : Infinity, dy ? (b.h / 2 + 3) / Math.abs(dy) : Infinity); return [cx + dx * t, cy + dy * t]; }
+function contentSVG(map, L, o = {}){
+  const idx = getIndex(map);
+  let gs = '', ls = '', ns = '', rs = '';
+  const gl = [...L.values()].filter(b => b.n.group).sort((a, b) => a.d - b.d);
+  for (const b of gl){
+    const s = subBox(b), pad = 10 + (gl.length > 1 ? 0 : 0), lab = b.n.group.label, lh = lab ? 22 : 0;
+    const x = s.x0 - pad, y = s.y0 - pad - lh, w = s.x1 - s.x0 + pad * 2, h = s.y1 - s.y0 + pad * 2 + lh;
+    gs += `<g data-gid="${b.n.id}"><rect x="${r1(x)}" y="${r1(y)}" width="${r1(w)}" height="${r1(h)}" rx="14" fill="${tint(b.color, 0.9)}" fill-opacity=".6" stroke="${b.color}" stroke-width="1.4" stroke-dasharray="6 4"/>${lab ? `<text x="${r1(x + 10)}" y="${r1(y + 16)}" font-size="12" font-weight="700" fill="${b.color}" font-family='${FONT}'>${esc(lab)}</text>` : ''}</g>`;
+  }
+  for (const b of L.values()){
+    if (b.p) ls += `<path d="${connPath(b, map.layout)}" fill="none" stroke="${b.color}" stroke-width="${b.d === 1 ? 2.4 : b.d === 2 ? 1.7 : 1.3}" stroke-linecap="round" stroke-linejoin="round"/>`;
+    ns += nodeSVG(b, o.sel === b.n.id, o.dim && o.dim.has(b.n.id), o.export);
+  }
+  const mk = o.mk || 'a';
+  for (const r of map.relations || []){
+    const A = visibleBox(L, idx, r.from), B = visibleBox(L, idx, r.to);
+    if (!A || !B || A === B) continue;
+    const ax = A.x + A.w / 2, ay = A.y + A.h / 2, bx = B.x + B.w / 2, by = B.y + B.h / 2;
+    const dx = bx - ax, dy = by - ay, dist = Math.hypot(dx, dy) || 1;
+    const off = Math.min(90, dist * 0.32);
+    const qx = (ax + bx) / 2 - dy / dist * off, qy = (ay + by) / 2 + dx / dist * off;
+    const [px, py] = edgePt(A, qx, qy), [ex, ey] = edgePt(B, qx, qy);
+    const d = `M${r1(px)} ${r1(py)}Q${r1(qx)} ${r1(qy)} ${r1(ex)} ${r1(ey)}`;
+    const sel = o.selRel === r.id, col = sel ? '#3b82f6' : '#7b8496';
+    rs += `<g data-rel="${r.id}"><path d="${d}" fill="none" stroke="transparent" stroke-width="16"/><path d="${d}" fill="none" stroke="${col}" stroke-width="${sel ? 2.2 : 1.6}" stroke-dasharray="6 4" marker-end="url(#${mk}${sel ? 's' : ''})"/>`;
+    if (r.label){
+      const lx = 0.25 * px + 0.5 * qx + 0.25 * ex, ly = 0.25 * py + 0.5 * qy + 0.25 * ey;
+      mctx.font = `500 12px ${FONT}`; const tw = mctx.measureText(r.label).width;
+      rs += `<rect x="${r1(lx - tw / 2 - 7)}" y="${r1(ly - 11)}" width="${r1(tw + 14)}" height="22" rx="11" fill="#fff" stroke="${col}" stroke-width="1"/><text x="${r1(lx)}" y="${r1(ly + 4.2)}" text-anchor="middle" font-size="12" font-weight="500" fill="${sel ? '#1d4ed8' : '#4b5466'}" font-family='${FONT}'>${esc(r.label)}</text>`;
+    }
+    rs += '</g>';
+  }
+  return gs + ls + ns + rs;
+}
+function markerDefs(mk){ return `<defs><marker id="${mk}" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#7b8496"/></marker><marker id="${mk}s" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#3b82f6"/></marker></defs>`; }
+
+/* ================= 패널(창) ================= */
+const panes = [];
+function makePane(i){
+  const el = document.createElement('div'); el.className = 'pane'; el.dataset.pane = i;
+  el.innerHTML = `<div class="pane-label"></div><svg class="canvas" xmlns="http://www.w3.org/2000/svg">${markerDefs('mk' + i)}<g class="world"></g></svg>
+    <div class="zoombar"><button data-z="out" title="축소">−</button><span class="zl">100%</span><button data-z="in" title="확대">＋</button><button data-z="fit" title="화면 맞춤" style="font-size:12px">맞춤</button></div>
+    <div class="mini"><svg xmlns="http://www.w3.org/2000/svg"><g class="mc"></g><rect class="vp" fill="rgba(59,130,246,.12)" stroke="#3b82f6" stroke-width="1"/></svg></div>`;
+  $('#panes').appendChild(el);
+  const p = { i, el, svg: el.querySelector('.canvas'), world: el.querySelector('.world'), mini: el.querySelector('.mini svg'), label: el.querySelector('.pane-label'), zl: el.querySelector('.zl'),
+    views: {}, sel: null, selRel: null, mapId: null, L: null, ptrs: new Map(), g: null, lastTap: 0, lastTapId: null, mk: 'mk' + i };
+  bindPane(p); panes.push(p); return p;
+}
+function fp(){ return panes[S.settings.split ? S.focus : 0]; }
+function curMap(p = fp()){ return S.maps[p.mapId]; }
+function view(p){ return p.views[p.mapId] || (p.views[p.mapId] = { x: 0, y: 0, k: 1, fresh: true }); }
+function applyView(p){
+  const v = view(p);
+  p.world.setAttribute('transform', `translate(${r1(v.x)} ${r1(v.y)}) scale(${v.k.toFixed(4)})`);
+  p.zl.textContent = Math.round(v.k * 100) + '%';
+  updateMiniVp(p);
+}
+function renderPane(p){
+  const map = S.maps[p.mapId];
+  p.label.textContent = map ? map.name : '';
+  if (!map){ p.world.innerHTML = ''; p.L = null; return; }
+  const L = layoutMap(map); p.L = L;
+  const idx = getIndex(map);
+  if (p.sel && !idx.has(p.sel)) p.sel = null;
+  if (p.sel && !L.has(p.sel)) p.sel = visibleBox(L, idx, p.sel)?.n.id || null;
+  if (p.selRel && !(map.relations || []).some(r => r.id === p.selRel)) p.selRel = null;
+  p.world.innerHTML = contentSVG(map, L, { sel: p.sel, selRel: p.selRel, mk: p.mk, dim: p.drag ? p.drag.set : null }) + '<g class="overlay"></g>';
+  const v = view(p);
+  if (v.fresh){ delete v.fresh; fitPane(p, true); }
+  applyView(p); renderMini(p);
+}
+function renderAll(){
+  renderTabs();
+  $('#panes').classList.toggle('split', S.settings.split);
+  $('#panes').classList.toggle('nomini', !S.settings.minimap);
+  panes[1].el.style.display = S.settings.split ? '' : 'none';
+  panes.forEach(p => p.el.classList.toggle('focus', S.settings.split && p === fp()));
+  panes.forEach((p, i) => { if (i === 0 || S.settings.split) renderPane(p); });
+  updateToolbar(); updatePanel();
+}
+function fitPane(p, initial){
+  if (!p.L) return; const r = p.svg.getBoundingClientRect(); if (!r.width || !r.height){ view(p).fresh = true; return; }
+  const bb = bounds(p.L), v = view(p);
+  v.k = clamp(Math.min((r.width - 20) / bb.w, (r.height - 20) / bb.h), 0.12, initial ? 1.1 : 1.6);
+  v.x = r.width / 2 - (bb.x + bb.w / 2) * v.k; v.y = r.height / 2 - (bb.y + bb.h / 2) * v.k;
+  if (initial && v.k < 0.6){ const map = S.maps[p.mapId]; const rb = map && p.L.get(map.root.id); v.k = 0.6; if (rb){ v.x = r.width / 2 - (rb.x + rb.w / 2) * v.k; v.y = r.height / 2 - (rb.y + rb.h / 2) * v.k; } }
+  applyView(p);
+}
+function visibleBottom(p, r){ const pn = $('#panel'); if (S.settings.panel && getComputedStyle(pn).position === 'fixed'){ const t = pn.getBoundingClientRect().top; return Math.min(r.height, t - r.top); } return r.height; }
+function zoomAt(p, f, cx, cy){
+  const v = view(p), r = p.svg.getBoundingClientRect();
+  const sx = cx == null ? r.width / 2 : cx - r.left, sy = cy == null ? r.height / 2 : cy - r.top;
+  const nk = clamp(v.k * f, 0.1, 4); const wx = (sx - v.x) / v.k, wy = (sy - v.y) / v.k;
+  v.k = nk; v.x = sx - wx * nk; v.y = sy - wy * nk; applyView(p);
+}
+function ensureVisible(p, id){
+  const b = p.L && p.L.get(id); if (!b) return; const v = view(p), r = p.svg.getBoundingClientRect(), m = 30;
+  const sx = v.x + b.x * v.k, sy = v.y + b.y * v.k, sw = b.w * v.k, sh = b.h * v.k; let dx = 0, dy = 0;
+  if (sx < m) dx = m - sx; else if (sx + sw > r.width - m) dx = Math.max(m - sx, (r.width - m) - (sx + sw));
+  const vb = visibleBottom(p, r);
+  if (sy < m) dy = m - sy; else if (sy + sh > vb - m) dy = Math.max(m - sy, (vb - m) - (sy + sh));
+  if (dx || dy){ v.x += dx; v.y += dy; applyView(p); }
+}
+function clientToWorld(p, cx, cy){ const v = view(p), r = p.svg.getBoundingClientRect(); return [(cx - r.left - v.x) / v.k, (cy - r.top - v.y) / v.k]; }
+
+/* 미니맵 */
+function renderMini(p){
+  if (!S.settings.minimap || !p.L) return;
+  const bb = bounds(p.L); p.miniBB = bb;
+  p.mini.setAttribute('viewBox', `${r1(bb.x)} ${r1(bb.y)} ${r1(bb.w)} ${r1(bb.h)}`);
+  p.mini.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+  let s = '';
+  for (const b of p.L.values()) s += `<rect x="${r1(b.x)}" y="${r1(b.y)}" width="${r1(b.w)}" height="${r1(b.h)}" rx="${r1(b.m.rx)}" fill="${b.d === 0 ? b.color : tint(b.color, 0.55)}"/>`;
+  p.mini.querySelector('.mc').innerHTML = s; updateMiniVp(p);
+}
+function updateMiniVp(p){
+  if (!S.settings.minimap || !p.miniBB) return; const v = view(p), r = p.svg.getBoundingClientRect();
+  const vp = p.mini.querySelector('.vp'); const sw = Math.max(1, p.miniBB.w / 160);
+  vp.setAttribute('x', r1(-v.x / v.k)); vp.setAttribute('y', r1(-v.y / v.k)); vp.setAttribute('width', r1(r.width / v.k)); vp.setAttribute('height', r1(r.height / v.k)); vp.setAttribute('stroke-width', sw);
+}
+function miniNav(p, e){
+  const pt = p.mini.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY; const ctm = p.mini.getScreenCTM(); if (!ctm) return;
+  const w = pt.matrixTransform(ctm.inverse()); const v = view(p), r = p.svg.getBoundingClientRect();
+  v.x = r.width / 2 - w.x * v.k; v.y = r.height / 2 - w.y * v.k; applyView(p);
+}
+
+/* ================= 포인터 조작 ================= */
+function bindPane(p){
+  const svg = p.svg;
+  svg.addEventListener('pointerdown', e => {
+    focusPane(p);
+    if (edit) commitEditor();
+    const inLink = e.target.closest && e.target.closest('[data-link]');
+    if (!inLink) { try { svg.setPointerCapture(e.pointerId); } catch(_){} }
+    p.ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    const v = view(p);
+    if (p.ptrs.size === 2){
+      const [a, b] = [...p.ptrs.values()];
+      p.g = { type: 'pinch', d0: Math.hypot(a.x - b.x, a.y - b.y) || 1, cx: (a.x + b.x) / 2, cy: (a.y + b.y) / 2, v: { ...v } };
+      if (p.drag) cancelDrag(p);
+      return;
+    }
+    if (p.ptrs.size > 2) return;
+    const t = e.target;
+    p.g = { type: 'pending', sx: e.clientX, sy: e.clientY, v: { ...v },
+      tog: t.closest('[data-toggle]')?.dataset.toggle, nodeId: t.closest('[data-id]')?.dataset.id,
+      relId: t.closest('[data-rel]')?.dataset.rel, gid: t.closest('[data-gid]')?.dataset.gid,
+      badge: t.closest('[data-badge]')?.dataset.badge, link: !!inLink };
+  });
+  svg.addEventListener('pointermove', e => {
+    if (!p.ptrs.has(e.pointerId)) return;
+    p.ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    const g = p.g; if (!g) return; const v = view(p);
+    if (g.type === 'pinch'){
+      if (p.ptrs.size < 2) return; const [a, b] = [...p.ptrs.values()];
+      const d = Math.hypot(a.x - b.x, a.y - b.y), cx = (a.x + b.x) / 2, cy = (a.y + b.y) / 2, r = svg.getBoundingClientRect();
+      const k = clamp(g.v.k * d / g.d0, 0.1, 4); const wx = (g.cx - r.left - g.v.x) / g.v.k, wy = (g.cy - r.top - g.v.y) / g.v.k;
+      v.k = k; v.x = cx - r.left - wx * k; v.y = cy - r.top - wy * k; applyView(p); return;
+    }
+    const dx = e.clientX - g.sx, dy = e.clientY - g.sy;
+    if (g.type === 'pending' && Math.hypot(dx, dy) > 6){
+      const map = curMap(p);
+      if (g.nodeId && g.nodeId === p.sel && map && g.nodeId !== map.root.id && !relMode && !g.tog){ g.type = 'drag'; startDrag(p, g.nodeId); }
+      else g.type = 'pan';
+    }
+    if (g.type === 'pan'){ v.x = g.v.x + dx; v.y = g.v.y + dy; applyView(p); }
+    else if (g.type === 'drag') updateDrag(p, e.clientX, e.clientY);
+  });
+  const end = (e, cancel) => {
+    p.ptrs.delete(e.pointerId);
+    const g = p.g; if (!g) return;
+    if (g.type === 'pinch'){ if (p.ptrs.size === 0) p.g = null; else p.g = { type: 'pan-wait' }; return; }
+    if (g.type === 'pan-wait'){ if (!p.ptrs.size) p.g = null; return; }
+    p.g = null;
+    if (g.type === 'drag'){ cancel ? cancelDrag(p) : finishDrag(p); return; }
+    if (g.type === 'pending' && !cancel) handleTap(p, g);
+  };
+  svg.addEventListener('pointerup', e => end(e, false));
+  svg.addEventListener('pointercancel', e => end(e, true));
+  svg.addEventListener('wheel', e => {
+    e.preventDefault();
+    if (e.ctrlKey || e.metaKey) zoomAt(p, Math.exp(-e.deltaY * 0.01), e.clientX, e.clientY);
+    else { const v = view(p); const f = e.deltaMode === 1 ? 20 : 1; v.x -= e.deltaX * f; v.y -= e.deltaY * f; applyView(p); }
+  }, { passive: false });
+  p.el.querySelector('.zoombar').addEventListener('click', e => {
+    const z = e.target.closest('[data-z]')?.dataset.z; if (!z) return; focusPane(p);
+    if (z === 'in') zoomAt(p, 1.25); else if (z === 'out') zoomAt(p, 0.8); else fitPane(p);
+  });
+  const mini = p.el.querySelector('.mini'); let mdown = false;
+  mini.addEventListener('pointerdown', e => { mdown = true; try { mini.setPointerCapture(e.pointerId); } catch(_){} miniNav(p, e); });
+  mini.addEventListener('pointermove', e => { if (mdown) miniNav(p, e); });
+  mini.addEventListener('pointerup', () => mdown = false);
+  mini.addEventListener('pointercancel', () => mdown = false);
+}
+function focusPane(p){ if (!S.settings.split || S.focus === p.i) return; S.focus = p.i; panes.forEach(q => q.el.classList.toggle('focus', q === p)); renderTabs(); updateToolbar(); updatePanel(); }
+function handleTap(p, g){
+  const map = curMap(p); if (!map) return;
+  const now = Date.now();
+  if (g.tog){ const info = getIndex(map).get(g.tog); if (info) mutate(map, () => { info.n.collapsed = !info.n.collapsed; }); return; }
+  if (g.nodeId){
+    if (relMode){
+      if (relMode.pane === p.i && relMode.from !== g.nodeId && getIndex(map).has(relMode.from)){
+        const r = { id: uid(), from: relMode.from, to: g.nodeId, label: '' };
+        relMode = null;
+        mutate(map, () => { map.relations = map.relations || []; map.relations.push(r); p.sel = null; p.selRel = r.id; });
+        toast('관계선 추가됨 · 속성에서 라벨을 입력하세요');
+      } else { relMode = null; toast('관계선 취소'); updateToolbar(); }
+      return;
+    }
+    if (g.badge === 'files' || g.badge === 'note'){ p.sel = g.nodeId; p.selRel = null; S.settings.panel = true; renderAll(); return; }
+    if (p.sel === g.nodeId && p.lastTapId === g.nodeId && now - p.lastTap < 420){ p.lastTap = 0; openEditor(p, g.nodeId); return; }
+    p.lastTap = now; p.lastTapId = g.nodeId;
+    if (p.sel !== g.nodeId || p.selRel){ p.sel = g.nodeId; p.selRel = null; renderAll(); }
+    return;
+  }
+  if (g.relId){
+    if (p.selRel === g.relId && p.lastTapId === g.relId && now - p.lastTap < 420){ p.lastTap = 0; editRelLabel(p, g.relId); return; }
+    p.lastTap = now; p.lastTapId = g.relId; p.selRel = g.relId; p.sel = null; renderAll(); return;
+  }
+  if (g.gid){ p.sel = g.gid; p.selRel = null; renderAll(); return; }
+  if (relMode){ relMode = null; toast('관계선 취소'); }
+  if (p.sel || p.selRel){ p.sel = null; p.selRel = null; renderAll(); } else updateToolbar();
+}
+async function editRelLabel(p, rid){
+  const map = curMap(p); const r = map.relations.find(x => x.id === rid); if (!r) return;
+  const v = await promptDlg('관계선 라벨', r.label || ''); if (v == null) return;
+  mutate(map, () => { r.label = v.trim(); });
+}
+
+/* 드래그 이동 */
+function startDrag(p, id){
+  const map = curMap(p); const info = getIndex(map).get(id);
+  p.drag = { id, set: subtreeIds(info.n), target: null, mode: null };
+  p.world.querySelectorAll('[data-id]').forEach(el => { if (p.drag.set.has(el.dataset.id)) el.setAttribute('opacity', '.3'); });
+}
+function updateDrag(p, cx, cy){
+  const d = p.drag; if (!d) return; const map = curMap(p);
+  const [wx, wy] = clientToWorld(p, cx, cy);
+  const org = map.layout === 'org';
+  let target = null, mode = null;
+  for (const [id, b] of p.L){
+    if (d.set.has(id)) continue;
+    if (wx >= b.x - 6 && wx <= b.x + b.w + 6 && wy >= b.y - 6 && wy <= b.y + b.h + 6){
+      target = b;
+      if (b.d === 0) mode = 'child';
+      else { const rel = org ? (wx - b.x) / b.w : (wy - b.y) / b.h; mode = rel < 0.28 ? 'before' : rel > 0.72 ? 'after' : 'child'; }
+      break;
+    }
+  }
+  d.target = target; d.mode = mode; d.wx = wx;
+  const src = p.L.get(d.id); const ov = p.world.querySelector('.overlay');
+  let s = `<rect x="${r1(wx - src.w / 2)}" y="${r1(wy - src.h / 2)}" width="${r1(src.w)}" height="${r1(src.h)}" rx="${r1(src.m.rx)}" fill="${tint(src.color, 0.8)}" fill-opacity=".85" stroke="${src.color}" stroke-dasharray="4 3"/><text x="${r1(wx)}" y="${r1(wy + src.m.fs * 0.35)}" text-anchor="middle" font-size="${r1(src.m.fs)}" fill="#1d2433" font-family='${FONT}'>${esc((src.n.text || '').split('\n')[0].slice(0, 30))}</text>`;
+  if (target){
+    const b = target;
+    if (mode === 'child') s = `<rect x="${r1(b.x - 5)}" y="${r1(b.y - 5)}" width="${r1(b.w + 10)}" height="${r1(b.h + 10)}" rx="${r1(b.m.rx + 5)}" fill="rgba(59,130,246,.08)" stroke="#3b82f6" stroke-width="2.5"/>` + s;
+    else if (org){ const x = mode === 'before' ? b.x - 9 : b.x + b.w + 9; s = `<line x1="${r1(x)}" x2="${r1(x)}" y1="${r1(b.y - 4)}" y2="${r1(b.y + b.h + 4)}" stroke="#3b82f6" stroke-width="4" stroke-linecap="round"/>` + s; }
+    else { const y = mode === 'before' ? b.y - 7 : b.y + b.h + 7; s = `<line x1="${r1(b.x - 4)}" x2="${r1(b.x + b.w + 4)}" y1="${r1(y)}" y2="${r1(y)}" stroke="#3b82f6" stroke-width="4" stroke-linecap="round"/>` + s; }
+  }
+  ov.innerHTML = s;
+  // 가장자리 자동 스크롤
+  const r = p.svg.getBoundingClientRect(), v = view(p), m = 36; let dx = 0, dy = 0;
+  if (cx - r.left < m) dx = 8; else if (r.right - cx < m) dx = -8;
+  if (cy - r.top < m) dy = 8; else if (r.bottom - cy < m) dy = -8;
+  if (dx || dy){ v.x += dx; v.y += dy; applyView(p); }
+}
+function cancelDrag(p){ p.drag = null; renderAll(); }
+function finishDrag(p){
+  const d = p.drag; p.drag = null; const map = curMap(p);
+  if (!d || !d.target){ renderAll(); return; }
+  const t = d.target; let side = null;
+  if (map.layout === 'balanced'){
+    if (d.mode === 'child' && t.d === 0) side = d.wx < t.x + t.w / 2 ? 'L' : 'R';
+    else if (d.mode !== 'child' && t.d === 1) side = t.side < 0 ? 'L' : 'R';
+  }
+  moveNode(p, map, d.id, t.n.id, d.mode, side);
+}
+function moveNode(p, map, id, tid, mode, side){
+  const idx = getIndex(map); const a = idx.get(id), t = idx.get(tid);
+  if (!a || !t || !a.p) { renderAll(); return; }
+  let q = t; while (q){ if (q.n.id === id){ renderAll(); return; } q = q.p ? idx.get(q.p.id) : null; }
+  if (mode !== 'child' && !t.p) mode = 'child';
+  mutate(map, () => {
+    const arr = a.p.children; arr.splice(arr.indexOf(a.n), 1);
+    let np;
+    if (mode === 'child'){ t.n.children.push(a.n); t.n.collapsed = false; np = t.n; }
+    else { np = t.p; const sib = np.children; const i = sib.indexOf(t.n); sib.splice(mode === 'before' ? i : i + 1, 0, a.n); }
+    if (np === map.root){ if (side) a.n.side = side; } else delete a.n.side;
+    p.sel = id;
+  });
+}
+
+/* ================= 편집 명령 ================= */
+function lighterSide(p){ let r = 0, l = 0; const map = curMap(p); for (const k of map.root.children){ const b = p.L && p.L.get(k.id); if (!b) continue; if (b.side < 0) l += b.sh || b.h; else r += b.sh || b.h; } return r <= l ? 'R' : 'L'; }
+function addChild(p){
+  const map = curMap(p); if (!map) return; commitEditor();
+  const id = p.sel || map.root.id; const info = getIndex(map).get(id); if (!info) return;
+  const c = newNode('새 주제');
+  if (info.n === map.root && map.layout === 'balanced') c.side = lighterSide(p);
+  mutate(map, () => { info.n.collapsed = false; info.n.children.push(c); p.sel = c.id; p.selRel = null; });
+  openEditor(p, c.id, { selectAll: true });
+}
+function addSibling(p){
+  const map = curMap(p); if (!map) return; commitEditor();
+  if (!p.sel){ p.sel = map.root.id; renderAll(); return; }
+  const info = getIndex(map).get(p.sel); if (!info || !info.p) return addChild(p);
+  const c = newNode('새 주제');
+  if (info.p === map.root && map.layout === 'balanced'){ const b = p.L.get(info.n.id); c.side = b && b.side < 0 ? 'L' : 'R'; }
+  mutate(map, () => { const arr = info.p.children; arr.splice(arr.indexOf(info.n) + 1, 0, c); p.sel = c.id; p.selRel = null; });
+  openEditor(p, c.id, { selectAll: true });
+}
+function delSel(p){
+  const map = curMap(p); if (!map) return;
+  if (p.selRel){ const rid = p.selRel; mutate(map, () => { map.relations = map.relations.filter(r => r.id !== rid); p.selRel = null; }); return; }
+  if (!p.sel) return; const info = getIndex(map).get(p.sel);
+  if (!info || !info.p){ toast('중심 주제는 삭제할 수 없어요'); return; }
+  const ids = subtreeIds(info.n);
+  mutate(map, () => {
+    const arr = info.p.children, i = arr.indexOf(info.n); arr.splice(i, 1);
+    map.relations = (map.relations || []).filter(r => !ids.has(r.from) && !ids.has(r.to));
+    p.sel = (arr[i] || arr[i - 1] || info.p).id;
+  });
+}
+function toggleCollapse(p){ const map = curMap(p); const info = p.sel && getIndex(map).get(p.sel); if (!info || !info.n.children.length || !info.p) return; mutate(map, () => { info.n.collapsed = !info.n.collapsed; }); }
+function navigate(p, key){
+  const map = curMap(p); if (!map || !p.L) return;
+  if (!p.sel){ p.sel = map.root.id; renderAll(); return; }
+  const b = p.L.get(p.sel); if (!b) return;
+  const cx = b.x + b.w / 2, cy = b.y + b.h / 2; let best = null, bs = Infinity;
+  for (const [id, o] of p.L){
+    if (id === p.sel) continue;
+    const dx = o.x + o.w / 2 - cx, dy = o.y + o.h / 2 - cy;
+    let pr, se;
+    if (key === 'ArrowRight'){ pr = dx; se = dy; } else if (key === 'ArrowLeft'){ pr = -dx; se = dy; } else if (key === 'ArrowDown'){ pr = dy; se = dx; } else { pr = -dy; se = dx; }
+    if (pr <= 4) continue; const sc = pr + Math.abs(se) * 2.2; if (sc < bs){ bs = sc; best = id; }
+  }
+  if (best){ p.sel = best; renderAll(); ensureVisible(p, best); }
+}
+
+/* 텍스트 편집기 */
+const editor = $('#editor'); let edit = null;
+function autosize(){ editor.style.height = 'auto'; editor.style.height = editor.scrollHeight + 'px'; }
+function openEditor(p, id, o = {}){
+  if (edit) commitEditor();
+  const b = p.L && p.L.get(id); if (!b) return;
+  ensureVisible(p, id);
+  const v = view(p), r = p.svg.getBoundingClientRect();
+  const fs = Math.max(15, b.m.fs * v.k); const w = Math.max(b.w * v.k + 16, 180);
+  edit = { p, id };
+  editor.value = o.text != null ? o.text : b.n.text;
+  Object.assign(editor.style, { display: 'block', fontSize: fs + 'px', fontWeight: b.m.weight, width: Math.min(w, window.innerWidth - 16) + 'px',
+    left: clamp(r.left + v.x + (b.x + b.w / 2) * v.k - w / 2, 8, window.innerWidth - Math.min(w, window.innerWidth - 16) - 8) + 'px',
+    top: Math.max(8, r.top + v.y + b.y * v.k - 2) + 'px' });
+  autosize(); editor.focus({ preventScroll: true });
+  if (o.selectAll) editor.select(); else { const n = editor.value.length; editor.setSelectionRange(n, n); }
+}
+function commitEditor(cancel){
+  if (!edit) return; const { p, id } = edit; edit = null; editor.style.display = 'none';
+  if (cancel){ renderAll(); return; }
+  const map = S.maps[p.mapId]; const info = map && getIndex(map).get(id); if (!info) return;
+  const val = editor.value.replace(/\s+$/, '');
+  if (val !== info.n.text) mutate(map, () => { info.n.text = val; });
+}
+editor.addEventListener('keydown', e => {
+  if (e.isComposing || e.keyCode === 229) return;
+  if (e.key === 'Escape'){ e.preventDefault(); commitEditor(true); editor.blur(); return; }
+  if (e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); commitEditor(); editor.blur(); return; }
+  if (e.key === 'Tab'){ e.preventDefault(); const p = edit.p; commitEditor(); addChild(p); }
+});
+editor.addEventListener('input', autosize);
+editor.addEventListener('blur', () => commitEditor());
+
+/* 키보드 */
+document.addEventListener('keydown', e => {
+  if ($('#modal').classList.contains('open')){ if (e.key === 'Escape') closeModal(); return; }
+  const t = e.target; if (t === editor) return;
+  if (t && t.matches && t.matches('input,textarea,select,[contenteditable]')) return;
+  const p = fp(); const mod = e.ctrlKey || e.metaKey; const k = e.key;
+  if (mod && (k === 'z' || k === 'Z')){ e.preventDefault(); e.shiftKey ? redo() : undo(); return; }
+  if (mod && (k === 'y' || k === 'Y')){ e.preventDefault(); redo(); return; }
+  if (mod && k === '0'){ e.preventDefault(); fitPane(p); return; }
+  if (mod && (k === '=' || k === '+')){ e.preventDefault(); zoomAt(p, 1.2); return; }
+  if (mod && k === '-'){ e.preventDefault(); zoomAt(p, 0.83); return; }
+  if (mod || e.altKey) return;
+  switch (k){
+    case 'Tab': e.preventDefault(); addChild(p); return;
+    case 'Enter': e.preventDefault(); addSibling(p); return;
+    case 'Delete': case 'Backspace': if (p.sel || p.selRel){ e.preventDefault(); delSel(p); } return;
+    case 'F2': case ' ': if (p.sel){ e.preventDefault(); openEditor(p, p.sel); } return;
+    case 'Escape': relMode = null; p.sel = null; p.selRel = null; renderAll(); return;
+    case 'ArrowUp': case 'ArrowDown': case 'ArrowLeft': case 'ArrowRight': e.preventDefault(); navigate(p, k); return;
+  }
+  if (p.sel && (k.length === 1 || k === 'Process' || e.keyCode === 229)){
+    if (k.length === 1){ e.preventDefault(); openEditor(p, p.sel, { text: k }); }
+    else openEditor(p, p.sel, { text: '' });
+  }
+});
+
+/* ================= 탭 / 툴바 ================= */
+function renderTabs(){
+  const a = panes[0].mapId, b = S.settings.split ? panes[1].mapId : null, f = fp().mapId;
+  $('#tablist').innerHTML = S.order.filter(id => S.maps[id]).map(id => `<button class="tab${id === f ? ' on' : ''}${S.settings.split && id !== f && (id === a || id === b) ? ' on2' : ''}" data-tab="${id}">${esc(S.maps[id].name)}</button>`).join('') + `<button class="tab add" data-newtab title="새 마인드맵">＋</button>`;
+}
+$('#tablist').addEventListener('click', e => {
+  const t = e.target.closest('button'); if (!t) return;
+  if (t.hasAttribute('data-newtab')){ const m = newMap(); S.maps[m.id] = m; S.order.push(m.id); indexDirty = true; touch(m); showMap(m.id); return; }
+  const id = t.dataset.tab; if (id === fp().mapId) tabMenu(id); else showMap(id);
+});
+function showMap(id){
+  commitEditor(); const p = fp(); p.mapId = id; if (p.i === 0) S.active = id; else S.pane2 = id; p.sel = null; p.selRel = null; relMode = null;
+  renderAll(); saveLocalSoon();
+  const t = $(`[data-tab="${id}"]`); if (t) t.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+}
+function tabMenu(id){
+  const m = S.maps[id];
+  menuDlg(m.name, [
+    { label: '✎ 이름 바꾸기', fn: async () => { const v = await promptDlg('맵 이름', m.name); if (v && v.trim()){ m.name = v.trim(); touch(m); indexDirty = true; renderAll(); } } },
+    { label: '⧉ 복제', fn: () => { const c = JSON.parse(JSON.stringify(m)); const remap = n => { n.id = uid(); n.children.forEach(remap); }; const ids = {}; const walk = n => { const o = n.id; n.id = uid(); ids[o] = n.id; n.children.forEach(walk); }; walk(c.root); c.relations = (c.relations || []).map(r => ({ ...r, id: uid(), from: ids[r.from], to: ids[r.to] })); c.id = uid(); c.name = m.name + ' 사본'; delete c._sample; delete c._v; S.maps[c.id] = c; S.order.splice(S.order.indexOf(id) + 1, 0, c.id); indexDirty = true; touch(c); showMap(c.id); } },
+    { label: '◀ 왼쪽으로 이동', fn: () => moveTab(id, -1) },
+    { label: '▶ 오른쪽으로 이동', fn: () => moveTab(id, 1) },
+    { label: '🗑 이 맵 삭제', danger: true, fn: async () => { if (await confirmDlg(`“${m.name}” 맵을 삭제할까요? 되돌릴 수 없어요.`, '삭제')) deleteMap(id); } }
+  ]);
+}
+function moveTab(id, d){ const i = S.order.indexOf(id), j = i + d; if (j < 0 || j >= S.order.length) return; S.order.splice(i, 1); S.order.splice(j, 0, id); indexDirty = true; scheduleSave(); renderTabs(); }
+function deleteMap(id){
+  delete S.maps[id]; S.order = S.order.filter(x => x !== id); S.deleted.push(id); delPending.add(id); dirty.delete(id); indexDirty = true;
+  if (!S.order.length){ const m = newMap(); S.maps[m.id] = m; S.order.push(m.id); touch(m); }
+  panes.forEach(p => { if (p.mapId === id){ p.mapId = S.order[0]; p.sel = null; } });
+  S.active = panes[0].mapId; S.pane2 = panes[1].mapId; scheduleSave(); renderAll();
+}
+const toolbar = $('#toolbar');
+toolbar.addEventListener('mousedown', e => { if (e.target.closest('button')) e.preventDefault(); });
+document.querySelectorAll('[data-act]').forEach(b => b.addEventListener('mousedown', e => e.preventDefault()));
+document.addEventListener('click', e => { const b = e.target.closest('[data-act]'); if (b) act(b.dataset.act); });
+function act(a){
+  const p = fp(), map = curMap(p);
+  switch (a){
+    case 'child': return addChild(p);
+    case 'sibling': if (!p.sel && map){ p.sel = map.root.id; } return p.sel === map.root.id ? addChild(p) : addSibling(p);
+    case 'edit': if (p.sel) openEditor(p, p.sel); else toast('편집할 주제를 선택하세요'); return;
+    case 'del': return delSel(p);
+    case 'undo': return undo();
+    case 'redo': return redo();
+    case 'fontDown': S.settings.fontScale = Math.max(0.6, Math.round((S.settings.fontScale - 0.1) * 10) / 10); mcache.clear(); saveLocalSoon(); return renderAll();
+    case 'fontUp': S.settings.fontScale = Math.min(2.2, Math.round((S.settings.fontScale + 0.1) * 10) / 10); mcache.clear(); saveLocalSoon(); return renderAll();
+    case 'notes': S.settings.showNotes = !S.settings.showNotes; saveLocalSoon(); return renderAll();
+    case 'rel': if (relMode){ relMode = null; updateToolbar(); return; } if (!p.sel){ toast('먼저 시작 주제를 선택하세요'); return; } relMode = { pane: p.i, from: p.sel }; toast('연결할 대상 주제를 탭하세요 (Esc 취소)', 3000); return updateToolbar();
+    case 'group': { const info = p.sel && getIndex(map).get(p.sel); if (!info){ toast('묶을 주제를 선택하세요'); return; } return mutate(map, () => { if (info.n.group) delete info.n.group; else info.n.group = { label: '' }; }); }
+    case 'collapse': return toggleCollapse(p);
+    case 'mini': S.settings.minimap = !S.settings.minimap; saveLocalSoon(); return renderAll();
+    case 'split':
+      S.settings.split = !S.settings.split;
+      if (S.settings.split){ const other = S.order.find(id => id !== panes[0].mapId); panes[1].mapId = S.maps[S.pane2] ? S.pane2 : (other || panes[0].mapId); S.pane2 = panes[1].mapId; S.focus = 1; } else S.focus = 0;
+      saveLocalSoon(); renderAll(); requestAnimationFrame(() => panes.forEach(q => { if (q.L) applyView(q); })); return;
+    case 'panel': S.settings.panel = !S.settings.panel; saveLocalSoon(); renderAll(); if (S.settings.panel && p.sel) ensureVisible(p, p.sel); return;
+    case 'menu': return mainMenu();
+  }
+}
+$('#layoutSel').addEventListener('change', e => { const map = curMap(); if (!map) return; mutate(map, () => { map.layout = e.target.value; }); fitPane(fp()); e.target.blur(); });
+function updateToolbar(){
+  const p = fp(), map = curMap(p), h = map && hist[map.id];
+  const q = a => toolbar.querySelector(`[data-act="${a}"]`);
+  q('undo').disabled = !(h && h.u.length); q('redo').disabled = !(h && h.r.length);
+  q('del').disabled = !(p.sel || p.selRel) || (map && p.sel === map.root.id);
+  q('edit').disabled = !p.sel; q('group').disabled = !p.sel; q('collapse').disabled = !p.sel || (map && p.sel === map.root.id);
+  q('notes').setAttribute('aria-pressed', S.settings.showNotes); q('mini').setAttribute('aria-pressed', S.settings.minimap);
+  q('split').setAttribute('aria-pressed', S.settings.split); q('panel').setAttribute('aria-pressed', S.settings.panel);
+  q('rel').setAttribute('aria-pressed', !!relMode);
+  if (map) $('#layoutSel').value = map.layout || 'balanced';
+  $('#fsLabel').textContent = Math.round(S.settings.fontScale * 100) + '%';
+}
+window.addEventListener('resize', () => { commitEditor(); panes.forEach(p => { if (p.L) applyView(p); }); });
+
+/* ================= 속성 패널 ================= */
+const pEl = id => document.getElementById(id);
+let panelArmed = false;
+function selInfo(){ const p = fp(), map = curMap(p); if (!map || !p.sel) return null; const i = getIndex(map).get(p.sel); return i ? { p, map, ...i } : null; }
+function selRel(){ const p = fp(), map = curMap(p); if (!map || !p.selRel) return null; const r = (map.relations || []).find(x => x.id === p.selRel); return r ? { p, map, r } : null; }
+(function buildColors(){
+  let s = `<button class="sw auto" data-color="" title="자동"></button>`;
+  for (const c of PALETTE) s += `<button class="sw" data-color="${c}" style="background:${c}"></button>`;
+  s += `<input type="color" id="pColorCustom" title="직접 선택">`;
+  pEl('pColors').innerHTML = s;
+})();
+function updatePanel(){
+  const panel = $('#panel'); panel.classList.toggle('open', S.settings.panel);
+  if (!S.settings.panel) return;
+  const si = selInfo(), sr = selRel(); const ae = document.activeElement;
+  pEl('pEmpty').style.display = si || sr ? 'none' : '';
+  pEl('pNodeSec').style.display = si ? '' : 'none';
+  pEl('pRelSec').style.display = sr ? '' : 'none';
+  pEl('pTitle').textContent = si ? (si.d === 0 ? '중심 주제' : '주제 속성') : sr ? '관계선' : '속성';
+  if (sr){ if (ae !== pEl('pRelLabel')) pEl('pRelLabel').value = sr.r.label || ''; }
+  if (!si) return;
+  const n = si.n;
+  if (ae !== pEl('pText')) pEl('pText').value = n.text || '';
+  if (ae !== pEl('pNote')) pEl('pNote').value = n.note || '';
+  if (ae !== pEl('pLink')) pEl('pLink').value = n.link || '';
+  const lo = pEl('pLinkOpen'); if (n.link){ lo.href = n.link; lo.style.display = ''; } else lo.style.display = 'none';
+  pEl('pColors').querySelectorAll('.sw').forEach(b => b.classList.toggle('on', (b.dataset.color || '') === (n.color || '')));
+  pEl('pFs').textContent = Math.round((n.fs || 1) * 100) + '%';
+  const th = pEl('pImgThumb'); pEl('pImgDel').style.display = n.img ? '' : 'none';
+  if (n.img){ const a = attCache[n.img.att]; if (a){ th.src = a.data; th.style.display = 'block'; } else { th.style.display = 'none'; requestAtt(n.img.att); } } else th.style.display = 'none';
+  pEl('pFiles').innerHTML = (n.files || []).map((f, i) => `<div class="file-item"><span title="${esc(f.name)}">📎 ${esc(f.name)} <span class="muted">${fmtSize(f.size || 0)}</span></span><button class="btn" data-fdl="${i}">받기</button><button class="btn danger" data-fdel="${i}">✕</button></div>`).join('') || '<div class="muted">첨부 파일 없음</div>';
+  pEl('pGroup').checked = !!n.group;
+  pEl('pGroupLabel').style.display = n.group ? '' : 'none';
+  if (ae !== pEl('pGroupLabel')) pEl('pGroupLabel').value = n.group ? n.group.label || '' : '';
+  pEl('pCollapse').style.display = si.p && n.children.length ? '' : 'none';
+  pEl('pDelete').style.display = si.p ? '' : 'none';
+}
+function liveField(id, apply){
+  const el = pEl(id);
+  el.addEventListener('focus', () => { panelArmed = true; });
+  el.addEventListener('input', () => {
+    const si = id === 'pRelLabel' ? selRel() : selInfo(); if (!si) return;
+    if (panelArmed){ pushUndo(si.map); panelArmed = false; }
+    apply(si, el.value); touch(si.map); renderAll();
+  });
+}
+liveField('pText', (si, v) => { si.n.text = v; });
+liveField('pNote', (si, v) => { if (v.trim()) si.n.note = v; else delete si.n.note; });
+liveField('pGroupLabel', (si, v) => { if (si.n.group) si.n.group.label = v; });
+liveField('pRelLabel', (si, v) => { si.r.label = v; });
+pEl('pLink').addEventListener('change', () => { const si = selInfo(); if (!si) return; let v = pEl('pLink').value.trim(); if (v && !/^[a-z][a-z0-9+.-]*:/i.test(v)) v = 'https://' + v; mutate(si.map, () => { if (v) si.n.link = v; else delete si.n.link; }); });
+pEl('pColors').addEventListener('click', e => { const b = e.target.closest('.sw'); if (!b) return; const si = selInfo(); if (!si) return; mutate(si.map, () => { if (b.dataset.color) si.n.color = b.dataset.color; else delete si.n.color; }); });
+pEl('pColorCustom').addEventListener('change', e => { const si = selInfo(); if (!si) return; mutate(si.map, () => { si.n.color = e.target.value; }); });
+const setNodeFs = f => { const si = selInfo(); if (!si) return; mutate(si.map, () => { const v = Math.round(clamp(f(si.n.fs || 1), 0.6, 3) * 10) / 10; if (v === 1) delete si.n.fs; else si.n.fs = v; }); };
+pEl('pFsDown').onclick = () => setNodeFs(v => v - 0.1);
+pEl('pFsUp').onclick = () => setNodeFs(v => v + 0.1);
+pEl('pFsReset').onclick = () => setNodeFs(() => 1);
+pEl('pGroup').onchange = e => { const si = selInfo(); if (!si) return; mutate(si.map, () => { if (e.target.checked) si.n.group = si.n.group || { label: '' }; else delete si.n.group; }); };
+pEl('pCollapse').onclick = () => toggleCollapse(fp());
+pEl('pDelete').onclick = () => delSel(fp());
+pEl('pRelDel').onclick = () => delSel(fp());
+pEl('pRelFlip').onclick = () => { const sr = selRel(); if (!sr) return; mutate(sr.map, () => { [sr.r.from, sr.r.to] = [sr.r.to, sr.r.from]; }); };
+pEl('pImgAdd').onclick = () => pEl('fImg').click();
+pEl('pFileAdd').onclick = () => pEl('fFile').click();
+pEl('pImgDel').onclick = () => { const si = selInfo(); if (!si) return; mutate(si.map, () => { delete si.n.img; }); };
+pEl('pFiles').addEventListener('click', async e => {
+  const si = selInfo(); if (!si) return;
+  const dl = e.target.closest('[data-fdl]'), del = e.target.closest('[data-fdel]');
+  if (dl){ const f = si.n.files[+dl.dataset.fdl]; const a = await getAtt(f.att); if (!a){ toast('파일을 찾을 수 없어요'); return; } saveFile(f.name, dataUrlToBlob(a.data)); }
+  if (del){ const i = +del.dataset.fdel; mutate(si.map, () => { si.n.files.splice(i, 1); if (!si.n.files.length) delete si.n.files; }); }
+});
+pEl('fImg').addEventListener('change', async e => {
+  const f = e.target.files[0]; e.target.value = ''; const si = selInfo(); if (!f || !si) return;
+  try {
+    const r = await fileToImage(f);
+    const att = { id: uid(), name: f.name, type: 'image/jpeg', size: r.data.length, data: r.data, w: r.w, h: r.h };
+    await storeAtt(att);
+    mutate(si.map, () => { si.n.img = { att: att.id, w: r.w, h: r.h }; });
+  } catch(err){ toast('이미지를 불러오지 못했어요'); }
+});
+pEl('fFile').addEventListener('change', async e => {
+  const f = e.target.files[0]; e.target.value = ''; const si = selInfo(); if (!f || !si) return;
+  if (f.size > 15 * 1048576){ toast('15MB 이하 파일만 첨부할 수 있어요'); return; }
+  const data = await new Promise((res, rej) => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.onerror = rej; fr.readAsDataURL(f); });
+  const att = { id: uid(), name: f.name, type: f.type, size: f.size, data };
+  await storeAtt(att);
+  if (data.length > CLOUD_MAX) toast('큰 파일이라 이 기기에만 저장돼요');
+  mutate(si.map, () => { (si.n.files = si.n.files || []).push({ att: att.id, name: f.name, size: f.size }); });
+});
+async function fileToImage(file){
+  const url = URL.createObjectURL(file);
+  try {
+    const img = new Image(); img.src = url; await img.decode();
+    const w = img.naturalWidth || 400, h = img.naturalHeight || 300; let max = 1100, q = 0.85, out;
+    for (let i = 0; i < 6; i++){
+      const s = Math.min(1, max / Math.max(w, h)), cw = Math.max(1, Math.round(w * s)), ch = Math.max(1, Math.round(h * s));
+      const c = document.createElement('canvas'); c.width = cw; c.height = ch; const ctx = c.getContext('2d');
+      ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, cw, ch); ctx.drawImage(img, 0, 0, cw, ch);
+      out = { data: c.toDataURL('image/jpeg', q), w: cw, h: ch };
+      if (out.data.length <= CLOUD_MAX) break; max *= 0.75; q = Math.max(0.5, q - 0.08);
+    }
+    return out;
+  } finally { URL.revokeObjectURL(url); }
+}
+function dataUrlToBlob(d){ const [h, b] = d.split(','); const mime = (h.match(/data:([^;]+)/) || [])[1] || 'application/octet-stream'; const bin = atob(b); const u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return new Blob([u], { type: mime }); }
+
+/* ================= 모달 ================= */
+let modalResolve = null;
+function openModal(html){ $('#modalBox').innerHTML = html; $('#modal').classList.add('open'); }
+function closeModal(val){ $('#modal').classList.remove('open'); $('#modalBox').innerHTML = ''; const r = modalResolve; modalResolve = null; if (r) r(val); }
+$('#modal').addEventListener('click', e => { if (e.target.id === 'modal') closeModal(null); });
+function promptDlg(title, value, multiline){
+  return new Promise(res => {
+    modalResolve = res;
+    openModal(`<h3>${esc(title)}</h3>${multiline ? `<textarea id="mIn" rows="5">${esc(value)}</textarea>` : `<input id="mIn" value="${esc(value)}">`}<div class="acts"><button class="btn" id="mNo">취소</button><button class="btn primary" id="mOk">확인</button></div>`);
+    const i = $('#mIn'); i.focus(); i.select();
+    $('#mOk').onclick = () => closeModal(i.value); $('#mNo').onclick = () => closeModal(null);
+    if (!multiline) i.onkeydown = e => { if (e.key === 'Enter' && !e.isComposing){ e.preventDefault(); closeModal(i.value); } };
+  });
+}
+function confirmDlg(msg, ok = '확인'){
+  return new Promise(res => { modalResolve = res; openModal(`<h3>확인</h3><div style="font-size:14px;line-height:1.5">${esc(msg)}</div><div class="acts"><button class="btn" id="mNo">취소</button><button class="btn primary" id="mOk">${esc(ok)}</button></div>`); $('#mOk').onclick = () => closeModal(true); $('#mNo').onclick = () => closeModal(false); });
+}
+function menuDlg(title, items){
+  openModal(`<h3>${esc(title)}</h3><div class="menu">${items.map((it, i) => it.hd ? `<div class="hd">${esc(it.hd)}</div>` : `<button data-mi="${i}"${it.danger ? ' style="color:#c92a2a"' : ''}>${esc(it.label)}</button>`).join('')}</div><div class="acts"><button class="btn" id="mNo">닫기</button></div>`);
+  $('#mNo').onclick = () => closeModal();
+  $('#modalBox').querySelectorAll('[data-mi]').forEach(b => b.onclick = () => { const it = items[+b.dataset.mi]; closeModal(); setTimeout(() => it.fn(), 0); });
+}
+function mainMenu(){
+  menuDlg('메뉴', [
+    { hd: '내보내기 (현재 맵)' },
+    { label: '📝 Markdown (.md)', fn: exportMD },
+    { label: '🖼 이미지 (.png)', fn: exportPNG },
+    { label: '📊 Excel (.xlsx)', fn: exportXLSX },
+    { label: '{ } JSON (.json)', fn: () => exportJSON(false) },
+    { label: '💾 전체 백업 — 모든 맵 JSON', fn: () => exportJSON(true) },
+    { hd: '가져오기' },
+    { label: '📥 XMind (.xmind) / JSON 불러오기', fn: () => pEl('fImport').click() },
+    { hd: '기타' },
+    { label: '⌨ 단축키 · 사용법', fn: helpDlg },
+    { label: '☁ 저장 상태', fn: () => menuDlg('저장 상태', [{ hd: syncText() }, { hd: '모든 변경은 이 기기(이 브라우저/홈 화면 앱)에 즉시 저장되고 오프라인에서도 열려요. 다른 기기와는 자동 동기화되지 않으니, 가끔 ‘전체 백업 JSON’을 내보내 두고 다른 기기에서 가져오기 하세요.' }]) }
+  ]);
+}
+function helpDlg(){
+  const rows = [['Tab','자식 주제 추가'],['Enter','형제 주제 추가'],['F2 / Space / 더블탭','주제 편집 (바로 타이핑해도 편집 시작)'],['Shift+Enter','편집 중 줄바꿈'],['Esc','편집 취소 · 선택 해제'],['Delete','주제/관계선 삭제'],['방향키','주제 이동'],['Ctrl+Z / Ctrl+Shift+Z','실행 취소 / 다시 실행'],['Ctrl+0','화면 맞춤'],['Ctrl+휠 · 두 손가락 핀치','확대/축소'],['드래그 (빈 곳)','화면 이동'],['선택된 주제 드래그','순서·부모 변경 (위/아래 = 형제, 가운데 = 자식)'],['활성 탭 다시 탭','맵 이름 변경·복제·삭제']];
+  openModal(`<h3>단축키 · 사용법</h3><table>${rows.map(r => `<tr><td>${esc(r[0])}</td><td>${esc(r[1])}</td></tr>`).join('')}</table><div class="acts"><button class="btn" id="mNo">닫기</button></div>`);
+  $('#mNo').onclick = () => closeModal();
+}
+
+/* ================= 저장 (IndexedDB + 클라우드) ================= */
+let idb = null;
+function idbOpen(){ return new Promise(res => { try { const r = indexedDB.open('mindmap-app', 1); r.onupgradeneeded = () => { r.result.createObjectStore('kv'); r.result.createObjectStore('att'); }; r.onsuccess = () => res(r.result); r.onerror = () => res(null); r.onblocked = () => res(null); } catch(e){ res(null); } }); }
+function idbGet(store, key){ return new Promise(res => { if (!idb) return res(undefined); try { const q = idb.transaction(store).objectStore(store).get(key); q.onsuccess = () => res(q.result); q.onerror = () => res(undefined); } catch(e){ res(undefined); } }); }
+function idbPut(store, key, val){ return new Promise(res => { if (!idb) return res(false); try { const t = idb.transaction(store, 'readwrite'); t.objectStore(store).put(val, key); t.oncomplete = () => res(true); t.onerror = () => res(false); } catch(e){ res(false); } }); }
+const memAtt = {};
+async function storeAtt(att){ attCache[att.id] = att; memAtt[att.id] = att; await idbPut('att', att.id, att); attPending.add(att.id); }
+async function getAtt(id){ if (attCache[id]) return attCache[id]; let a = await idbGet('att', id); if (!a && col){ try { const s = await col.doc('a_' + id).get(); if (s.exists){ a = { ...s.data() }; idbPut('att', id, a); } } catch(e){} } if (a) attCache[id] = a; return a; }
+function requestAtt(id){ if (attCache[id] || attLoading.has(id)) return; attLoading.add(id); getAtt(id).then(a => { if (a) setTimeout(renderAll, 0); }); }
+let localTimer = null, cloudTimer = null;
+function saveLocalSoon(){ clearTimeout(localTimer); localTimer = setTimeout(saveLocal, 300); }
+function scheduleSave(){ saveLocalSoon(); clearTimeout(cloudTimer); cloudTimer = setTimeout(cloudPush, 1500); }
+function saveLocal(){
+  const st = JSON.stringify({ maps: S.maps, order: S.order, deleted: S.deleted.slice(-500), active: panes[0]?.mapId || S.active, pane2: S.pane2, focus: S.focus, settings: S.settings,
+    pending: { dirty: [...dirty], del: [...delPending], att: [...attPending], index: indexDirty } });
+  if (idb) idbPut('kv', 'state', st); else try { localStorage.setItem('mindmap-state', st); } catch(e){}
+}
+/* 클라우드 */
+let col = null, syncState = 'local';
+function syncText(){ return { local: '이 기기에 저장됨', ok: '☁ 이 기기 + 계정에 저장됨', saving: '☁ 저장 중…', err: '⚠ 클라우드 동기화 실패 — 이 기기에는 저장됨', loading: '☁ 불러오는 중…' }[syncState]; }
+function setSync(s){ syncState = s; $('#sync').textContent = { local: '💾 기기 저장', ok: '☁ 저장됨', saving: '☁ 저장 중…', err: '⚠ 동기화 오류', loading: '☁ 연결 중…' }[s]; $('#sync').title = syncText(); }
+function withTimeout(pr, ms){ return Promise.race([pr, new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), ms))]); }
+async function connectCloud(){
+  try {
+    if (!window.claude || typeof window.claude.use !== 'function'){ setSync('local'); return; }
+    const [db, user] = await Promise.all([window.claude.use('db'), window.claude.use('user')]);
+    if (!db || !user){ setSync('local'); return; }
+    const id = await user.id(); if (!id){ setSync('local'); return; }
+    col = db.collection('data/users/' + id);
+    await cloudPull(true);
+  } catch(e){ setSync(col ? 'err' : 'local'); }
+}
+async function cloudPull(first){
+  if (!col) return; if (first) setSync('loading');
+  try {
+    const [qs, ix] = await withTimeout(Promise.all([col.where('kind', '==', 'map').get(), col.doc('index').get()]), 12000);
+    const idx = ix.exists ? ix.data() : null;
+    const delSet = new Set([...(S.deleted || []), ...((idx && idx.deleted) || [])]);
+    S.deleted = [...delSet].slice(-500);
+    let changed = false; const remoteIds = new Set();
+    if (qs.size && Object.values(S.maps).every(m => m._sample)){ for (const id of Object.keys(S.maps)){ delete S.maps[id]; S.order = S.order.filter(x => x !== id); } changed = true; }
+    for (const d of qs.docs){
+      let m; try { m = JSON.parse(d.data().json); } catch(e){ continue; }
+      if (!m || !m.id) continue; remoteIds.add(m.id);
+      if (delSet.has(m.id)){ delPending.add(m.id); continue; }
+      const loc = S.maps[m.id];
+      if (!loc || (m.updatedAt || 0) > (loc.updatedAt || 0)){ delete m._v; S.maps[m.id] = m; delete hist[m.id]; changed = true; }
+      else if ((loc.updatedAt || 0) > (m.updatedAt || 0)) dirty.add(m.id);
+    }
+    for (const id of Object.keys(S.maps)){ if (delSet.has(id)){ delete S.maps[id]; changed = true; } else if (!remoteIds.has(id) && !S.maps[id]._sample) dirty.add(id); }
+    const ro = ((idx && idx.order) || []).filter(id => S.maps[id]);
+    const newOrder = [...ro, ...S.order.filter(id => S.maps[id] && !ro.includes(id)), ...Object.keys(S.maps).filter(id => !ro.includes(id) && !S.order.includes(id))];
+    if (newOrder.join() !== S.order.join()){ S.order = newOrder; changed = true; }
+    if (!S.order.length){ const m = sampleMap(); S.maps[m.id] = m; S.order.push(m.id); changed = true; }
+    if (changed){
+      panes.forEach(p => { if (!S.maps[p.mapId]){ p.mapId = S.order[0]; p.sel = null; } });
+      S.active = panes[0].mapId; S.pane2 = panes[1].mapId;
+      renderAll(); saveLocal();
+    }
+    setSync('ok');
+    if (dirty.size || delPending.size || attPending.size || indexDirty || (idx && ro.length !== S.order.filter(id => !S.maps[id]._sample).length)) { indexDirty = true; cloudPush(); }
+  } catch(e){ setSync('err'); }
+}
+let pushing = false, pushAgain = false;
+async function cloudPush(){
+  if (!col) return; if (pushing){ pushAgain = true; return; }
+  pushing = true; setSync('saving'); let ok = true;
+  try {
+    for (const id of [...dirty]){
+      dirty.delete(id); const m = S.maps[id]; if (!m || m._sample) continue;
+      const json = JSON.stringify(m, (k, v) => k === '_v' ? undefined : v);
+      if (json.length > 250000){ toast(`“${m.name}”이(가) 너무 커서 이 기기에만 저장돼요`); continue; }
+      try { await col.doc('m_' + id).set({ kind: 'map', updatedAt: m.updatedAt, json }); } catch(e){ dirty.add(id); ok = false; }
+    }
+    for (const id of [...delPending]){ delPending.delete(id); try { await col.doc('m_' + id).delete(); } catch(e){ delPending.add(id); ok = false; } }
+    for (const id of [...attPending]){
+      attPending.delete(id); const a = attCache[id] || await idbGet('att', id); if (!a || !a.data || a.data.length > CLOUD_MAX) continue;
+      try { await col.doc('a_' + id).set({ kind: 'att', name: a.name || '', type: a.type || '', size: a.size || 0, w: a.w || 0, h: a.h || 0, data: a.data }); } catch(e){ attPending.add(id); ok = false; }
+    }
+    if (indexDirty){ indexDirty = false; try { await col.doc('index').set({ kind: 'index', order: S.order.filter(id => S.maps[id] && !S.maps[id]._sample), deleted: S.deleted.slice(-500), updatedAt: Date.now() }); } catch(e){ indexDirty = true; ok = false; } }
+  } catch(e){ ok = false; }
+  pushing = false; setSync(ok ? 'ok' : 'err'); saveLocal();
+  if (pushAgain){ pushAgain = false; cloudPush(); }
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden'){ saveLocal(); if (col) cloudPush(); }
+  else if (col && !dirty.size && !pushing && !edit) cloudPull(false);
+});
+
+/* ================= 내보내기 ================= */
+let dlPromise = null;
+function getDownloads(){ if (!dlPromise) dlPromise = (window.claude && window.claude.use ? window.claude.use('downloads') : Promise.resolve(null)).catch(() => null); return dlPromise; }
+function safeName(s){ return (s || 'mindmap').replace(/[\\/:*?"<>|]+/g, '_').trim().slice(0, 80) || 'mindmap'; }
+async function saveFile(name, data){
+  const dl = await getDownloads();
+  if (dl){
+    try { await dl.save({ filename: name, data }); toast('저장했어요'); return; }
+    catch(e){
+      const c = e && e.code;
+      if (c === 'declined') return;
+      if (c === 'rate_limited'){ toast('잠시 후 다시 시도해 주세요'); return; }
+      if (c === 'rejected_extension' || c === 'extension_not_enabled'){ toast('이 형식은 여기서 내려받을 수 없어요'); return; }
+    }
+  }
+  if (!window.claude){ try { const blob = data instanceof Blob ? data : new Blob([data], { type: "text/plain;charset=utf-8" }); const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 4000); toast("저장했어요"); return; } catch(e){} }
+  fallbackShow(name, data);
+}
+function fallbackShow(name, data){
+  if (typeof data === 'string'){
+    openModal(`<h3>${esc(name)}</h3><div class="muted" style="margin-bottom:8px">이 화면에서는 파일 저장이 막혀 있어요. 아래 내용을 복사해 쓰세요.</div><textarea id="mOut" rows="12" readonly style="font-family:ui-monospace,monospace;font-size:12px">${esc(data)}</textarea><div class="acts"><button class="btn" id="mNo">닫기</button><button class="btn primary" id="mCopy">복사</button></div>`);
+    $('#mNo').onclick = () => closeModal(); $('#mCopy').onclick = async () => { try { await navigator.clipboard.writeText(data); toast('복사했어요'); } catch(e){ $('#mOut').select(); toast('직접 선택해서 복사하세요'); } };
+  } else if (data instanceof Blob && /png|jpe?g/.test(name)){
+    const url = URL.createObjectURL(data);
+    openModal(`<h3>${esc(name)}</h3><div class="muted" style="margin-bottom:8px">이미지를 길게 누르거나 우클릭해서 저장하세요.</div><img src="${url}" style="max-width:100%;border:1px solid #e3e6ec;border-radius:8px"><div class="acts"><button class="btn" id="mNo">닫기</button></div>`);
+    $('#mNo').onclick = () => { URL.revokeObjectURL(url); closeModal(); };
+  } else toast('이 환경에서는 파일을 내려받을 수 없어요');
+}
+function exportMD(){
+  const map = curMap(); if (!map) return; const idx = getIndex(map);
+  const out = []; const one = s => (s || '').replace(/\n+/g, ' ').trim();
+  out.push('# ' + one(map.root.text));
+  if (map.root.note) out.push('', ...map.root.note.trim().split('\n').map(l => '> ' + l));
+  if (map.root.link) out.push('', `[링크](${map.root.link})`);
+  out.push('');
+  (function walk(n, d){ for (const c of n.children){ const ind = '  '.repeat(d); let line = ind + '- ' + one(c.text); if (c.link) line += ` ([링크](${c.link}))`; out.push(line); if (c.note) c.note.trim().split('\n').forEach(l => out.push(ind + '  > ' + l)); walk(c, d + 1); } })(map.root, 0);
+  if ((map.relations || []).length){ out.push('', '## 관계선'); for (const r of map.relations){ const a = idx.get(r.from), b = idx.get(r.to); if (a && b) out.push(`- ${one(a.n.text)} → ${one(b.n.text)}${r.label ? ': ' + r.label : ''}`); } }
+  saveFile(safeName(map.name) + '.md', out.join('\n') + '\n');
+}
+async function exportPNG(){
+  const map = curMap(); if (!map) return; toast('이미지 만드는 중…');
+  const ids = []; (function w(n){ if (n.img) ids.push(n.img.att); if (!n.collapsed) n.children.forEach(w); })(map.root);
+  await Promise.all(ids.map(getAtt));
+  const L = layoutMap(map); const bb = bounds(L);
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${Math.ceil(bb.w)}" height="${Math.ceil(bb.h)}" viewBox="${bb.x} ${bb.y} ${bb.w} ${bb.h}">${markerDefs('ex')}<rect x="${bb.x}" y="${bb.y}" width="${bb.w}" height="${bb.h}" fill="#ffffff"/>${contentSVG(map, L, { export: true, mk: 'ex' })}</svg>`;
+  const url = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml;charset=utf-8' }));
+  try {
+    const img = new Image(); img.src = url; await img.decode();
+    const sc = Math.min(2, Math.sqrt(16e6 / (bb.w * bb.h)), 8000 / Math.max(bb.w, bb.h));
+    const c = document.createElement('canvas'); c.width = Math.round(bb.w * sc); c.height = Math.round(bb.h * sc);
+    const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height); ctx.drawImage(img, 0, 0, c.width, c.height);
+    const blob = await new Promise(res => c.toBlob(res, 'image/png'));
+    if (!blob) throw new Error('blob');
+    saveFile(safeName(map.name) + '.png', blob);
+  } catch(e){ toast('이미지를 만들지 못했어요'); }
+  finally { URL.revokeObjectURL(url); }
+}
+function exportJSON(all){
+  const ids = all ? S.order.filter(id => S.maps[id]) : [fp().mapId];
+  const maps = ids.map(id => JSON.parse(JSON.stringify(S.maps[id], (k, v) => k === '_v' || k === '_sample' ? undefined : v)));
+  const attIds = new Set(); const w = n => { if (n.img) attIds.add(n.img.att); (n.files || []).forEach(f => attIds.add(f.att)); n.children.forEach(w); }; maps.forEach(m => w(m.root));
+  Promise.all([...attIds].map(getAtt)).then(list => {
+    const atts = {}; list.forEach(a => { if (a) atts[a.id || ''] = a; });
+    for (const id of attIds) if (attCache[id]) atts[id] = attCache[id];
+    delete atts[''];
+    const data = JSON.stringify({ app: 'mindmap', version: 1, exportedAt: new Date().toISOString(), maps, atts }, null, 1);
+    saveFile(all ? `마인드맵_백업_${new Date().toISOString().slice(0, 10)}.json` : safeName(maps[0].name) + '.json', data);
+  });
+}
+/* XLSX (무압축 zip) */
+const CRC_T = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++){ let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+function crc32(u){ let c = 0xFFFFFFFF; for (let i = 0; i < u.length; i++) c = CRC_T[(c ^ u[i]) & 255] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
+function zipStore(files){
+  const enc = new TextEncoder(), parts = [], cen = []; let off = 0;
+  for (const f of files){
+    const nm = enc.encode(f.name), data = typeof f.data === 'string' ? enc.encode(f.data) : f.data, crc = crc32(data);
+    const lh = new DataView(new ArrayBuffer(30));
+    lh.setUint32(0, 0x04034b50, true); lh.setUint16(4, 20, true); lh.setUint16(6, 0x0800, true); lh.setUint16(8, 0, true); lh.setUint16(10, 0, true); lh.setUint16(12, 0x21, true);
+    lh.setUint32(14, crc, true); lh.setUint32(18, data.length, true); lh.setUint32(22, data.length, true); lh.setUint16(26, nm.length, true); lh.setUint16(28, 0, true);
+    parts.push(new Uint8Array(lh.buffer), nm, data);
+    const ch = new DataView(new ArrayBuffer(46));
+    ch.setUint32(0, 0x02014b50, true); ch.setUint16(4, 20, true); ch.setUint16(6, 20, true); ch.setUint16(8, 0x0800, true); ch.setUint16(10, 0, true); ch.setUint16(12, 0, true); ch.setUint16(14, 0x21, true);
+    ch.setUint32(16, crc, true); ch.setUint32(20, data.length, true); ch.setUint32(24, data.length, true); ch.setUint16(28, nm.length, true); ch.setUint32(42, off, true);
+    cen.push(new Uint8Array(ch.buffer), nm); off += 30 + nm.length + data.length;
+  }
+  const cs = cen.reduce((a, c) => a + c.length, 0), e = new DataView(new ArrayBuffer(22));
+  e.setUint32(0, 0x06054b50, true); e.setUint16(8, files.length, true); e.setUint16(10, files.length, true); e.setUint32(12, cs, true); e.setUint32(16, off, true);
+  return new Blob([...parts, ...cen, new Uint8Array(e.buffer)], { type: 'application/zip' });
+}
+function colName(i){ let s = ''; i++; while (i){ const m = (i - 1) % 26; s = String.fromCharCode(65 + m) + s; i = Math.floor((i - 1) / 26); } return s; }
+function xesc(s){ return String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, ''); }
+function sheetXML(rows, widths){
+  let x = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">`;
+  if (widths) x += `<cols>${widths.map((w, i) => `<col min="${i + 1}" max="${i + 1}" width="${w}" customWidth="1"/>`).join('')}</cols>`;
+  x += '<sheetData>';
+  rows.forEach((row, ri) => { x += `<row r="${ri + 1}">`; row.forEach((v, ci) => { if (v == null || v === '') return; x += `<c r="${colName(ci)}${ri + 1}" t="inlineStr"${ri === 0 ? ' s="1"' : ''}><is><t xml:space="preserve">${xesc(v)}</t></is></c>`; }); x += '</row>'; });
+  return x + '</sheetData></worksheet>';
+}
+function exportXLSX(){
+  const map = curMap(); if (!map) return; const idx = getIndex(map);
+  let maxD = 0; for (const v of idx.values()) maxD = Math.max(maxD, v.d);
+  const head = [...Array(maxD + 1)].map((_, i) => i === 0 ? '중심 주제' : `레벨 ${i}`).concat(['설명(노트)', '링크']);
+  const rows = [head];
+  (function walk(n, d){ const r = Array(maxD + 3).fill(''); r[d] = n.text || ''; r[maxD + 1] = n.note || ''; r[maxD + 2] = n.link || ''; rows.push(r); n.children.forEach(c => walk(c, d + 1)); })(map.root, 0);
+  const rrows = [['시작 주제', '대상 주제', '라벨']];
+  for (const r of map.relations || []){ const a = idx.get(r.from), b = idx.get(r.to); if (a && b) rrows.push([a.n.text, b.n.text, r.label || '']); }
+  const ws = [...Array(maxD + 1)].map(() => 22).concat([40, 30]);
+  const files = [
+    { name: '[Content_Types].xml', data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/worksheets/sheet2.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/></Types>` },
+    { name: '_rels/.rels', data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>` },
+    { name: 'xl/workbook.xml', data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="마인드맵" sheetId="1" r:id="rId1"/><sheet name="관계선" sheetId="2" r:id="rId2"/></sheets></workbook>` },
+    { name: 'xl/_rels/workbook.xml.rels', data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet2.xml"/><Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>` },
+    { name: 'xl/styles.xml', data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="2"><font><sz val="11"/><name val="맑은 고딕"/></font><font><b/><sz val="11"/><name val="맑은 고딕"/></font></fonts><fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="2"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/></cellXfs></styleSheet>` },
+    { name: 'xl/worksheets/sheet1.xml', data: sheetXML(rows, ws) },
+    { name: 'xl/worksheets/sheet2.xml', data: sheetXML(rrows, [28, 28, 24]) }
+  ];
+  saveFile(safeName(map.name) + '.xlsx', zipStore(files));
+}
+
+/* ================= 가져오기 ================= */
+pEl('fImport').addEventListener('change', async e => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+  try {
+    const buf = await f.arrayBuffer(); let maps = [];
+    if (/\.json$/i.test(f.name) || f.type.includes('json')) maps = await importJSON(new TextDecoder().decode(buf));
+    else maps = await importXMind(buf);
+    if (!maps.length){ toast('불러올 시트가 없어요'); return; }
+    for (const m of maps){ S.maps[m.id] = m; S.order.push(m.id); touch(m); }
+    indexDirty = true; showMap(maps[0].id);
+    toast(maps.length > 1 ? `${maps.length}개 시트를 탭으로 열었어요` : '불러왔어요');
+  } catch(err){ console.error(err); toast('파일을 읽지 못했어요: ' + (err.message || err)); }
+});
+async function importJSON(text){
+  const d = JSON.parse(text); const list = d.maps || (d.root ? [d] : []);
+  if (d.atts) for (const a of Object.values(d.atts)){ if (a && a.id && a.data){ await storeAtt(a); } }
+  return list.map(m => { const c = { ...m, id: S.maps[m.id] ? uid() : m.id, relations: m.relations || [], layout: m.layout || 'balanced', updatedAt: Date.now() }; delete c._v; delete c._sample; return c; });
+}
+async function unzip(buf){
+  const u = new Uint8Array(buf), dv = new DataView(buf); let e = -1;
+  for (let i = u.length - 22; i >= Math.max(0, u.length - 70000); i--) if (dv.getUint32(i, true) === 0x06054b50){ e = i; break; }
+  if (e < 0) throw new Error('XMind(zip) 형식이 아니에요');
+  const cnt = dv.getUint16(e + 10, true); let p = dv.getUint32(e + 16, true); const ents = {}; const dec = new TextDecoder();
+  for (let k = 0; k < cnt; k++){
+    if (dv.getUint32(p, true) !== 0x02014b50) break;
+    const method = dv.getUint16(p + 10, true), csize = dv.getUint32(p + 20, true), nl = dv.getUint16(p + 28, true), xl = dv.getUint16(p + 30, true), cl = dv.getUint16(p + 32, true), lo = dv.getUint32(p + 42, true);
+    ents[dec.decode(u.subarray(p + 46, p + 46 + nl))] = { method, csize, lo }; p += 46 + nl + xl + cl;
+  }
+  return { has: n => !!ents[n], async text(n){ const f = ents[n]; if (!f) return null; const s = f.lo + 30 + dv.getUint16(f.lo + 26, true) + dv.getUint16(f.lo + 28, true); const data = u.slice(s, s + f.csize); let out = data;
+    if (f.method === 8){ if (typeof DecompressionStream === 'undefined') throw new Error('이 브라우저는 압축 해제를 지원하지 않아요'); out = new Uint8Array(await new Response(new Blob([data]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer()); }
+    else if (f.method !== 0) throw new Error('지원하지 않는 압축 방식'); return dec.decode(out); } };
+}
+async function importXMind(buf){
+  const z = await unzip(buf); const maps = [];
+  if (z.has('content.json')){
+    const sheets = JSON.parse(await z.text('content.json'));
+    for (const sh of sheets){
+      if (!sh.rootTopic) continue; const ids = {};
+      const conv = t => { const n = newNode((t.title || '').replace(/\r/g, '')); ids[t.id] = n.id;
+        const note = t.notes && t.notes.plain && t.notes.plain.content; if (note && note.trim()) n.note = note.replace(/\r/g, '');
+        if (t.href && /^https?:/i.test(t.href)) n.link = t.href;
+        const ch = t.children || {}; n.children = (ch.attached || []).map(conv).concat((ch.detached || []).map(conv));
+        if (t.branch === 'folded') n.collapsed = true; return n; };
+      const m = newMap(sh.title || '시트'); m.root = conv(sh.rootTopic); m.layout = 'balanced';
+      m.relations = (sh.relationships || []).filter(r => ids[r.end1Id] && ids[r.end2Id]).map(r => ({ id: uid(), from: ids[r.end1Id], to: ids[r.end2Id], label: r.title || '' }));
+      maps.push(m);
+    }
+  } else if (z.has('content.xml')){
+    const doc = new DOMParser().parseFromString(await z.text('content.xml'), 'application/xml');
+    const kids = (el, name) => el ? [...el.children].filter(c => c.localName === name) : [];
+    const kid = (el, name) => kids(el, name)[0];
+    for (const sh of [...doc.getElementsByTagNameNS('*', 'sheet')]){
+      const rt = kid(sh, 'topic'); if (!rt) continue; const ids = {};
+      const conv = t => { const n = newNode((kid(t, 'title')?.textContent || '').replace(/\r/g, '')); ids[t.getAttribute('id')] = n.id;
+        const note = kid(kid(t, 'notes'), 'plain')?.textContent; if (note && note.trim()) n.note = note.replace(/\r/g, '');
+        const href = t.getAttributeNS('http://www.w3.org/1999/xlink', 'href') || t.getAttribute('xlink:href'); if (href && /^https?:/i.test(href)) n.link = href;
+        if (t.getAttribute('branch') === 'folded') n.collapsed = true;
+        const ch = kid(t, 'children'); n.children = [];
+        for (const tp of kids(ch, 'topics')) for (const c of kids(tp, 'topic')) n.children.push(conv(c));
+        return n; };
+      const m = newMap(kid(sh, 'title')?.textContent || '시트'); m.root = conv(rt);
+      m.relations = kids(kid(sh, 'relationships'), 'relationship').filter(r => ids[r.getAttribute('end1')] && ids[r.getAttribute('end2')]).map(r => ({ id: uid(), from: ids[r.getAttribute('end1')], to: ids[r.getAttribute('end2')], label: kid(r, 'title')?.textContent || '' }));
+      maps.push(m);
+    }
+  } else throw new Error('content.json / content.xml이 없어요');
+  return maps;
+}
+
+/* ================= 시작 ================= */
+(async function init(){
+  makePane(0); makePane(1);
+  idb = await idbOpen();
+  let st = null;
+  try { const raw = (await idbGet('kv', 'state')) || (idb ? null : localStorage.getItem('mindmap-state')); if (raw) st = JSON.parse(raw); } catch(e){}
+  if (st && st.maps && Object.keys(st.maps).length){
+    S.maps = st.maps; S.order = (st.order || []).filter(id => S.maps[id]); for (const id of Object.keys(S.maps)) if (!S.order.includes(id)) S.order.push(id);
+    S.deleted = st.deleted || []; Object.assign(S.settings, st.settings || {}); S.active = st.active; S.pane2 = st.pane2; S.focus = st.focus || 0;
+    if (st.pending){ (st.pending.dirty || []).forEach(x => dirty.add(x)); (st.pending.del || []).forEach(x => delPending.add(x)); (st.pending.att || []).forEach(x => attPending.add(x)); indexDirty = !!st.pending.index; }
+  } else { const m = sampleMap(); S.maps[m.id] = m; S.order = [m.id]; S.active = m.id; }
+  if (!S.maps[S.active]) S.active = S.order[0];
+  if (!S.maps[S.pane2]) S.pane2 = S.order.find(id => id !== S.active) || S.active;
+  if (!S.settings.split) S.focus = 0;
+  if (window.innerWidth < 760 && st == null) S.settings.panel = false;
+  panes[0].mapId = S.active; panes[1].mapId = S.pane2;
+  renderAll();
+  requestAnimationFrame(() => panes.forEach(p => { if (p.L){ const v = view(p); if (v.fresh){ delete v.fresh; fitPane(p, true); } } }));
+  setSync('local');
+  connectCloud();
+})();
+if ('serviceWorker' in navigator && location.protocol === 'https:') window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch(e){}
+</script>
+</body>
+</html>
