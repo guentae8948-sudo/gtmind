@@ -88,6 +88,33 @@ button{font:inherit;color:inherit;cursor:pointer}
 #modal table{font-size:13px;border-collapse:collapse;width:100%}
 #modal td{padding:5px 4px;border-bottom:1px solid #f0f1f4}
 #modal td:first-child{white-space:nowrap;font-family:ui-monospace,monospace;font-size:12px;color:#384152}
+#modal input[type=radio],#modal input[type=checkbox]{width:auto}
+#searchbar{position:absolute;top:8px;left:50%;transform:translateX(-50%);width:min(480px,calc(100% - 20px));background:#fff;border:1px solid var(--bd);border-radius:12px;box-shadow:0 4px 18px rgba(0,0,0,.12);padding:8px;display:none;z-index:20}
+#searchbar.on{display:block}
+#searchbar .srow{display:flex;gap:6px;align-items:center}
+#sInput{flex:1;min-width:0;font:inherit;font-size:15px;border:1px solid var(--bd);border-radius:8px;padding:7px 9px}
+#sCount{white-space:nowrap}
+#sTags{display:flex;gap:5px;flex-wrap:wrap;margin-top:7px;max-height:64px;overflow:auto}
+#sTags:empty{display:none}
+.tagchip{font-size:12px;border:1px solid #d0d7e2;background:#f4f6fa;border-radius:12px;padding:3px 9px;color:#3d4556}
+#quizbar{position:absolute;left:50%;bottom:56px;transform:translateX(-50%);background:#fff;border:1px solid var(--bd);border-radius:14px;box-shadow:0 4px 18px rgba(0,0,0,.14);padding:8px 10px;display:none;flex-direction:column;gap:7px;z-index:20;width:max-content;max-width:calc(100% - 16px)}
+#quizbar.on{display:flex}
+#quizbar .qrow{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:center}
+#quizbar button{border:1px solid var(--bd);background:#fff;border-radius:9px;padding:7px 11px;font-size:14px;white-space:nowrap}
+#quizbar .small button{font-size:12px;padding:5px 9px;color:var(--mut)}
+#quizbar .mk-o{color:#2b8a3e;border-color:#b2f2bb;background:#f4fcf5}
+#quizbar .mk-t{color:#c77700;border-color:#ffe08a;background:#fffbea}
+#quizbar .mk-x{color:#c92a2a;border-color:#ffc9c9;background:#fff5f5}
+#quizbar .pri{background:var(--ac);color:#fff;border-color:var(--ac)}
+#qstat{font-size:12px;color:#3d4556;text-align:center}
+body.quizon #toast{bottom:auto;top:100px}
+@media (max-width:760px){
+  #quizbar{bottom:10px;padding:7px 8px;gap:6px}
+  #quizbar button{padding:7px 9px;font-size:13px}
+  #quizbar .lbl{display:none}
+  #quizbar .small button{font-size:11px;padding:4px 7px}
+  body.quizon .mini,body.quizon .zoombar{display:none}
+}
 #toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#1f2633;color:#fff;padding:9px 16px;border-radius:20px;font-size:13px;z-index:200;opacity:0;transition:opacity .2s;pointer-events:none;max-width:90vw;text-align:center}
 #toast.show{opacity:1}
 #tabs{padding-top:calc(6px + env(safe-area-inset-top));padding-left:calc(8px + env(safe-area-inset-left));padding-right:calc(8px + env(safe-area-inset-right))}
@@ -114,6 +141,9 @@ button{font:inherit;color:inherit;cursor:pointer}
     <button class="tb" data-act="undo" title="실행 취소 (Ctrl+Z)">↶</button>
     <button class="tb" data-act="redo" title="다시 실행 (Ctrl+Shift+Z)">↷</button>
     <span class="sep"></span>
+    <button class="tb" data-act="quiz" title="목차 암기 모드: 하위 주제를 가리고 하나씩 확인">🧠 암기 모드</button>
+    <button class="tb" data-act="search" title="검색 · 태그 (Ctrl+F)">🔍 검색</button>
+    <span class="sep"></span>
     <select id="layoutSel" title="레이아웃">
       <option value="right">→ 오른쪽</option>
       <option value="left">← 왼쪽</option>
@@ -138,6 +168,15 @@ button{font:inherit;color:inherit;cursor:pointer}
   </div>
   <div id="main">
     <div id="panes"></div>
+    <div id="searchbar">
+      <div class="srow"><input id="sInput" type="search" placeholder="검색어 또는 #태그 (예: 수용 #2019기출)" autocomplete="off"><span id="sCount" class="muted"></span><button class="btn" id="sPrev" title="이전">▲</button><button class="btn" id="sNext" title="다음">▼</button><button class="btn" id="sClose" title="닫기">✕</button></div>
+      <div id="sTags"></div>
+    </div>
+    <div id="quizbar">
+      <div class="qrow"><span id="qstat"></span></div>
+      <div class="qrow"><button id="qPrev" title="이전 빈칸">◀</button><button id="qReveal" class="pri">공개</button><button id="qNext" title="다음 빈칸 (Space)">다음 ▶</button><span style="width:6px"></span><button class="mk-o" data-mark="o" title="알아 (1)">⭕<span class="lbl"> 알아</span></button><button class="mk-t" data-mark="t" title="애매 (2)">△<span class="lbl"> 애매</span></button><button class="mk-x" data-mark="x" title="몰라 (3)">❌<span class="lbl"> 몰라</span></button></div>
+      <div class="qrow small"><button id="qWeak">❌△만 다시</button><button id="qReset">처음부터 다시</button><button id="qAll">모두 공개</button><button id="qClear">기록 지우기</button><button id="qExit">종료</button></div>
+    </div>
     <aside id="panel">
       <div class="ph"><b id="pTitle">속성</b><button class="btn" data-act="panel">닫기</button></div>
       <div id="pEmpty" class="muted">주제를 탭해서 선택하세요.</div>
@@ -146,6 +185,9 @@ button{font:inherit;color:inherit;cursor:pointer}
         <textarea id="pText" rows="2"></textarea>
         <label>설명(노트) <span class="muted">— 맵에서 주제 아래에 표시돼요</span></label>
         <textarea id="pNote" rows="4" placeholder="설명을 입력하세요"></textarea>
+        <label>태그 <span class="muted">— 띄어쓰기로 구분</span></label>
+        <input id="pTags" type="text" placeholder="#2019기출 #빈출">
+        <div id="pMark" class="muted" style="margin-top:6px"></div>
         <label>색상</label>
         <div id="pColors"></div>
         <label>이 주제 글씨 크기</label>
@@ -271,7 +313,8 @@ function metrics(n, d){
   if (n.link) badges.push('link');
   if (n.files && n.files.length) badges.push('file');
   if (n.note && n.note.trim() && !S.settings.showNotes) badges.push('note');
-  const key = [n.text, fs, d > 1 ? 2 : d, showNote ? n.note : '', n.img ? n.img.w + 'x' + n.img.h : '', badges.join(','), (n.files || []).length].join('\u0001');
+  const tags = n.tags || [];
+  const key = [n.text, fs, d > 1 ? 2 : d, showNote ? n.note : '', n.img ? n.img.w + 'x' + n.img.h : '', badges.join(','), (n.files || []).length, tags.join(' ')].join('\u0001');
   const c = mcache.get(key); if (c) return c;
   if (mcache.size > 4000) mcache.clear();
   const weight = d === 0 ? 700 : d === 1 ? 600 : 400;
@@ -288,9 +331,20 @@ function metrics(n, d){
   const nfont = `400 ${nfs}px ${FONT}`;
   if (showNote){ noteLines = wrap(n.note.trim(), nfont, Math.max(maxW * 0.95, tw)); nw = lineW(noteLines, nfont); }
   const contentW = tw + bw;
-  const innerW = Math.max(contentW, img ? img.w : 0, nw, fs * 1.5);
-  const h = padY * 2 + (img ? img.h + fs * 0.4 : 0) + lines.length * lh + (showNote ? fs * 0.55 + noteLines.length * nlh : 0);
-  const m = { fs, nfs, weight, lines, tw, lh, bw, bfs, badges, padX, padY, img, noteLines, nlh, contentW, innerW,
+  // 태그 알약
+  const tfs = Math.max(10, fs * 0.72), tph = tfs * 1.55, tgap = 4;
+  const tagRows = []; let tagW = 0;
+  if (tags.length){
+    mctx.font = `500 ${tfs}px ${FONT}`;
+    const lim = Math.max(maxW * 0.9, contentW); let row = [], rw = 0;
+    for (const t of tags){ const w = mctx.measureText('#' + t).width + tfs * 1.1; if (row.length && rw + tgap + w > lim){ tagRows.push({ items: row, w: rw }); row = []; rw = 0; } row.push({ t, w }); rw += (row.length > 1 ? tgap : 0) + w; }
+    if (row.length) tagRows.push({ items: row, w: rw });
+    tagW = Math.max(...tagRows.map(r => r.w));
+  }
+  const tagH = tagRows.length ? tagRows.length * tph + (tagRows.length - 1) * tgap : 0;
+  const innerW = Math.max(contentW, img ? img.w : 0, nw, tagW, fs * 1.5);
+  const h = padY * 2 + (img ? img.h + fs * 0.4 : 0) + lines.length * lh + (tagH ? fs * 0.35 + tagH : 0) + (showNote ? fs * 0.55 + noteLines.length * nlh : 0);
+  const m = { fs, nfs, weight, lines, tw, lh, bw, bfs, badges, padX, padY, img, noteLines, nlh, contentW, innerW, tagRows, tfs, tph, tgap, tagH,
     w: innerW + padX * 2, h, rx: d === 0 ? fs * 0.7 : fs * 0.45 };
   mcache.set(key, m); return m;
 }
@@ -353,13 +407,32 @@ function connPath(b, mode){
   const dx = (x2 - x1) / 2;
   return `M${r1(x1)} ${r1(y1)}C${r1(x1 + dx)} ${r1(y1)} ${r1(x2 - dx)} ${r1(y2)} ${r1(x2)} ${r1(y2)}`;
 }
-function nodeSVG(b, sel, dim, forExport){
+const MARKS = { o: ['#2f9e44', '✓'], t: ['#f08c00', '△'], x: ['#e03131', '✕'] };
+function toggleSVG(b, sel){
+  const n = b.n; if (b.d === 0 || !n.children.length) return '';
+  const side = b.side;
+  const [tx, ty] = side === 2 ? [b.w / 2, b.h + 10] : side > 0 ? [b.w + 10, b.h / 2] : [-10, b.h / 2];
+  if (n.collapsed){
+    const cnt = countDesc(n); const rr = cnt > 99 ? 12 : 10;
+    return `<g data-toggle="${n.id}" transform="translate(${r1(tx)},${r1(ty)})"><circle r="${rr + 6}" fill="transparent"/><circle r="${rr}" fill="#fff" stroke="${b.color}" stroke-width="1.6"/><text text-anchor="middle" y="3.8" font-size="${cnt > 99 ? 9 : 10.5}" font-weight="700" fill="${b.color}" font-family='${FONT}'>${cnt}</text></g>`;
+  }
+  if (sel) return `<g data-toggle="${n.id}" transform="translate(${r1(tx)},${r1(ty)})"><circle r="15" fill="transparent"/><circle r="8.5" fill="#fff" stroke="${b.color}" stroke-width="1.6"/><path d="M-4 0H4" stroke="${b.color}" stroke-width="1.8"/></g>`;
+  return '';
+}
+function markSVG(b){ const mk = MARKS[b.n.mark]; if (!mk) return ''; return `<g transform="translate(${r1(b.w - 3)},-3)"><circle r="9" fill="${mk[0]}" stroke="#fff" stroke-width="1.5"/><text text-anchor="middle" y="4" font-size="11" font-weight="700" fill="#fff" font-family='${FONT}'>${mk[1]}</text></g>`; }
+function nodeSVG(b, sel, dim, forExport, x = {}){
   const n = b.n, m = b.m, isRoot = b.d === 0;
   const fill = isRoot ? b.color : tint(b.color, b.d === 1 ? 0.84 : 0.92);
   const tcol = isRoot ? (lum(b.color) > 0.62 ? '#1d2433' : '#fff') : '#1d2433';
   const ncol = isRoot ? (lum(b.color) > 0.62 ? '#4b5466' : 'rgba(255,255,255,.82)') : '#545d6e';
   let s = `<g class="node" data-id="${n.id}" transform="translate(${r1(b.x)},${r1(b.y)})"${dim ? ' opacity=".3"' : ''}>`;
+  if (x.hl) s += `<rect x="-7" y="-7" width="${r1(b.w + 14)}" height="${r1(b.h + 14)}" rx="${r1(m.rx + 7)}" fill="rgba(255,212,59,.28)" stroke="#f59f00" stroke-width="${x.cur ? 3.5 : 2}"/>`;
   if (sel) s += `<rect x="-4" y="-4" width="${r1(b.w + 8)}" height="${r1(b.h + 8)}" rx="${r1(m.rx + 4)}" fill="none" stroke="#3b82f6" stroke-width="2.5"/>`;
+  if (x.hidden){
+    s += `<rect width="${r1(b.w)}" height="${r1(b.h)}" rx="${r1(m.rx)}" fill="#f1f3f6" stroke="${b.color}" stroke-width="1.4" stroke-dasharray="5 4"/>`;
+    s += `<text x="${r1(b.w / 2)}" y="${r1(b.h / 2 + m.fs * 0.36)}" text-anchor="middle" font-size="${r1(m.fs)}" font-weight="700" fill="${b.color}" opacity=".55" font-family='${FONT}'>?</text>`;
+    return s + markSVG(b) + toggleSVG(b, sel) + '</g>';
+  }
   s += `<rect width="${r1(b.w)}" height="${r1(b.h)}" rx="${r1(m.rx)}" fill="${fill}"${isRoot ? '' : ` stroke="${b.color}" stroke-width="${b.d === 1 ? 1.6 : 1.1}"`}/>`;
   let y = m.padY;
   if (m.img){
@@ -388,24 +461,29 @@ function nodeSVG(b, sel, dim, forExport){
       } else { s += `<text x="${r1(bx)}" y="${r1(by)}" font-size="${r1(m.bfs)}" data-badge="note">📝</text>`; bx += m.bfs * 1.35; }
     }
   }
+  y += m.lines.length * m.lh;
+  if (m.tagRows.length){
+    y += m.fs * 0.35;
+    const tc = isRoot ? (lum(b.color) > 0.62 ? '#1d2433' : '#fff') : b.color;
+    for (const row of m.tagRows){
+      let tx = m.padX + (m.innerW - row.w) / 2;
+      for (const it of row.items){
+        s += `<rect x="${r1(tx)}" y="${r1(y)}" width="${r1(it.w)}" height="${r1(m.tph)}" rx="${r1(m.tph / 2)}" fill="${isRoot ? 'rgba(255,255,255,.16)' : '#fff'}" stroke="${tc}" stroke-opacity=".55"/><text x="${r1(tx + it.w / 2)}" y="${r1(y + m.tph / 2 + m.tfs * 0.36)}" text-anchor="middle" font-size="${r1(m.tfs)}" font-weight="500" fill="${tc}" font-family='${FONT}'>#${esc(it.t)}</text>`;
+        tx += it.w + m.tgap;
+      }
+      y += m.tph + m.tgap;
+    }
+    y -= m.tgap;
+  }
   if (m.noteLines.length){
-    y += m.lines.length * m.lh + m.fs * 0.28;
+    y += m.fs * 0.28;
     s += `<line x1="${r1(m.padX)}" x2="${r1(b.w - m.padX)}" y1="${r1(y)}" y2="${r1(y)}" stroke="${isRoot ? 'rgba(255,255,255,.35)' : b.color}" stroke-opacity="${isRoot ? 1 : 0.35}" stroke-dasharray="3 3"/>`;
     y += m.fs * 0.27;
     s += `<text font-size="${r1(m.nfs)}" fill="${ncol}" font-family='${FONT}'>`;
     m.noteLines.forEach((l, i) => { s += `<tspan x="${r1(m.padX)}" y="${r1(y + i * m.nlh + (m.nlh - m.nfs) / 2 + m.nfs * 0.83)}">${l === '' ? '​' : esc(l)}</tspan>`; });
     s += `</text>`;
   }
-  if (!isRoot && n.children.length && !forExport){
-    const side = b.side;
-    const [tx, ty] = side === 2 ? [b.w / 2, b.h + 10] : side > 0 ? [b.w + 10, b.h / 2] : [-10, b.h / 2];
-    if (n.collapsed){
-      const cnt = countDesc(n); const rr = cnt > 99 ? 12 : 10;
-      s += `<g data-toggle="${n.id}" transform="translate(${r1(tx)},${r1(ty)})"><circle r="${rr + 6}" fill="transparent"/><circle r="${rr}" fill="#fff" stroke="${b.color}" stroke-width="1.6"/><text text-anchor="middle" y="3.8" font-size="${cnt > 99 ? 9 : 10.5}" font-weight="700" fill="${b.color}" font-family='${FONT}'>${cnt}</text></g>`;
-    } else if (sel){
-      s += `<g data-toggle="${n.id}" transform="translate(${r1(tx)},${r1(ty)})"><circle r="15" fill="transparent"/><circle r="8.5" fill="#fff" stroke="${b.color}" stroke-width="1.6"/><path d="M-4 0H4" stroke="${b.color}" stroke-width="1.8"/></g>`;
-    }
-  }
+  if (!forExport) s += markSVG(b) + toggleSVG(b, sel);
   return s + '</g>';
 }
 function visibleBox(L, idx, id){ let info = idx.get(id); while (info){ const b = L.get(info.n.id); if (b) return b; info = info.p ? idx.get(info.p.id) : null; } return null; }
@@ -421,7 +499,9 @@ function contentSVG(map, L, o = {}){
   }
   for (const b of L.values()){
     if (b.p) ls += `<path d="${connPath(b, map.layout)}" fill="none" stroke="${b.color}" stroke-width="${b.d === 1 ? 2.4 : b.d === 2 ? 1.7 : 1.3}" stroke-linecap="round" stroke-linejoin="round"/>`;
-    ns += nodeSVG(b, o.sel === b.n.id, o.dim && o.dim.has(b.n.id), o.export);
+    const hl = !!(o.hl && o.hl.has(b.n.id));
+    ns += nodeSVG(b, o.sel === b.n.id, (o.dim && o.dim.has(b.n.id)) || (o.hl && o.hl.size && !hl), o.export,
+      { hidden: !o.export && isHidden(map, b.n, b.d), hl, cur: hl && o.cur === b.n.id });
   }
   const mk = o.mk || 'a';
   for (const r of map.relations || []){
@@ -476,7 +556,9 @@ function renderPane(p){
   if (p.sel && !idx.has(p.sel)) p.sel = null;
   if (p.sel && !L.has(p.sel)) p.sel = visibleBox(L, idx, p.sel)?.n.id || null;
   if (p.selRel && !(map.relations || []).some(r => r.id === p.selRel)) p.selRel = null;
-  p.world.innerHTML = contentSVG(map, L, { sel: p.sel, selRel: p.selRel, mk: p.mk, dim: p.drag ? p.drag.set : null }) + '<g class="overlay"></g>';
+  const sOn = search && search.q.trim() && p === fp();
+  p.world.innerHTML = contentSVG(map, L, { sel: p.sel, selRel: p.selRel, mk: p.mk, dim: p.drag ? p.drag.set : null,
+    hl: sOn ? new Set(search.matches) : null, cur: sOn ? search.matches[search.i] : null }) + '<g class="overlay"></g>';
   const v = view(p);
   if (v.fresh){ delete v.fresh; fitPane(p, true); }
   applyView(p); renderMini(p);
@@ -488,7 +570,14 @@ function renderAll(){
   panes[1].el.style.display = S.settings.split ? '' : 'none';
   panes.forEach(p => p.el.classList.toggle('focus', S.settings.split && p === fp()));
   panes.forEach((p, i) => { if (i === 0 || S.settings.split) renderPane(p); });
-  updateToolbar(); updatePanel();
+  updateToolbar(); updatePanel(); updateQuizBar();
+}
+function centerOn(p, id){
+  const b = p.L && p.L.get(id); if (!b) return; const v = view(p), r = p.svg.getBoundingClientRect();
+  if (v.k < 0.7) v.k = 0.7;
+  v.x = r.width / 2 - (b.x + b.w / 2) * v.k; v.y = visibleBottom(p, r) / 2 - (b.y + b.h / 2) * v.k;
+  if (quizOn(p) && $('#quizbar').classList.contains('on')) v.y -= $('#quizbar').offsetHeight / 2;
+  applyView(p);
 }
 function fitPane(p, initial){
   if (!p.L) return; const r = p.svg.getBoundingClientRect(); if (!r.width || !r.height){ view(p).fresh = true; return; }
@@ -572,7 +661,7 @@ function bindPane(p){
     const dx = e.clientX - g.sx, dy = e.clientY - g.sy;
     if (g.type === 'pending' && Math.hypot(dx, dy) > 6){
       const map = curMap(p);
-      if (g.nodeId && g.nodeId === p.sel && map && g.nodeId !== map.root.id && !relMode && !g.tog){ g.type = 'drag'; startDrag(p, g.nodeId); }
+      if (g.nodeId && g.nodeId === p.sel && map && g.nodeId !== map.root.id && !relMode && !g.tog && !quizOn(p)){ g.type = 'drag'; startDrag(p, g.nodeId); }
       else g.type = 'pan';
     }
     if (g.type === 'pan'){ v.x = g.v.x + dx; v.y = g.v.y + dy; applyView(p); }
@@ -618,6 +707,11 @@ function handleTap(p, g){
         toast('관계선 추가됨 · 속성에서 라벨을 입력하세요');
       } else { relMode = null; toast('관계선 취소'); updateToolbar(); }
       return;
+    }
+    if (quizOn(p)){
+      const info = getIndex(map).get(g.nodeId);
+      if (info && isHidden(map, info.n, info.d)) quiz.revealed.add(g.nodeId);
+      p.sel = g.nodeId; p.selRel = null; renderAll(); return;
     }
     if (g.badge === 'files' || g.badge === 'note'){ p.sel = g.nodeId; p.selRel = null; S.settings.panel = true; renderAll(); return; }
     if (p.sel === g.nodeId && p.lastTapId === g.nodeId && now - p.lastTap < 420){ p.lastTap = 0; openEditor(p, g.nodeId); return; }
@@ -703,8 +797,9 @@ function moveNode(p, map, id, tid, mode, side){
 
 /* ================= 편집 명령 ================= */
 function lighterSide(p){ let r = 0, l = 0; const map = curMap(p); for (const k of map.root.children){ const b = p.L && p.L.get(k.id); if (!b) continue; if (b.side < 0) l += b.sh || b.h; else r += b.sh || b.h; } return r <= l ? 'R' : 'L'; }
+function quizBlock(p){ if (quizOn(p)){ toast('암기 모드에서는 편집할 수 없어요 (종료 후 편집)'); return true; } return false; }
 function addChild(p){
-  const map = curMap(p); if (!map) return; commitEditor();
+  const map = curMap(p); if (!map || quizBlock(p)) return; commitEditor();
   const id = p.sel || map.root.id; const info = getIndex(map).get(id); if (!info) return;
   const c = newNode('새 주제');
   if (info.n === map.root && map.layout === 'balanced') c.side = lighterSide(p);
@@ -712,7 +807,7 @@ function addChild(p){
   openEditor(p, c.id, { selectAll: true });
 }
 function addSibling(p){
-  const map = curMap(p); if (!map) return; commitEditor();
+  const map = curMap(p); if (!map || quizBlock(p)) return; commitEditor();
   if (!p.sel){ p.sel = map.root.id; renderAll(); return; }
   const info = getIndex(map).get(p.sel); if (!info || !info.p) return addChild(p);
   const c = newNode('새 주제');
@@ -721,7 +816,7 @@ function addSibling(p){
   openEditor(p, c.id, { selectAll: true });
 }
 function delSel(p){
-  const map = curMap(p); if (!map) return;
+  const map = curMap(p); if (!map || quizBlock(p)) return;
   if (p.selRel){ const rid = p.selRel; mutate(map, () => { map.relations = map.relations.filter(r => r.id !== rid); p.selRel = null; }); return; }
   if (!p.sel) return; const info = getIndex(map).get(p.sel);
   if (!info || !info.p){ toast('중심 주제는 삭제할 수 없어요'); return; }
@@ -753,6 +848,7 @@ const editor = $('#editor'); let edit = null;
 function autosize(){ editor.style.height = 'auto'; editor.style.height = editor.scrollHeight + 'px'; }
 function openEditor(p, id, o = {}){
   if (edit) commitEditor();
+  if (quizBlock(p)) return;
   const b = p.L && p.L.get(id); if (!b) return;
   ensureVisible(p, id);
   const v = view(p), r = p.svg.getBoundingClientRect();
@@ -789,7 +885,17 @@ document.addEventListener('keydown', e => {
   const p = fp(); const mod = e.ctrlKey || e.metaKey; const k = e.key;
   if (mod && (k === 'z' || k === 'Z')){ e.preventDefault(); e.shiftKey ? redo() : undo(); return; }
   if (mod && (k === 'y' || k === 'Y')){ e.preventDefault(); redo(); return; }
+  if (mod && (k === 'f' || k === 'F')){ e.preventDefault(); openSearch(); return; }
   if (mod && k === '0'){ e.preventDefault(); fitPane(p); return; }
+  if (!mod && !e.altKey && quizOn(p)){
+    if (k === ' ' || k === 'Enter'){ e.preventDefault(); quizRevealOrNext(p); }
+    else if (k === '1' || k === '2' || k === '3'){ e.preventDefault(); quizMark(p, ['o', 't', 'x'][+k - 1]); }
+    else if (k === 'Escape') quizExit();
+    else if (k.startsWith('Arrow')){ e.preventDefault(); navigate(p, k); }
+    else if (k === 'Tab'){ e.preventDefault(); quizNext(p, e.shiftKey ? -1 : 1); }
+    return;
+  }
+  if (k === 'Escape' && search){ closeSearch(); return; }
   if (mod && (k === '=' || k === '+')){ e.preventDefault(); zoomAt(p, 1.2); return; }
   if (mod && k === '-'){ e.preventDefault(); zoomAt(p, 0.83); return; }
   if (mod || e.altKey) return;
@@ -819,6 +925,8 @@ $('#tablist').addEventListener('click', e => {
 });
 function showMap(id){
   commitEditor(); const p = fp(); p.mapId = id; if (p.i === 0) S.active = id; else S.pane2 = id; p.sel = null; p.selRel = null; relMode = null;
+  if (quiz && quiz.mapId !== id && !panes.some(q => q.mapId === quiz.mapId)) quiz = null;
+  if (search){ search.q = $('#sInput').value; runSearch(true); renderSearchTags(); }
   renderAll(); saveLocalSoon();
   const t = $(`[data-tab="${id}"]`); if (t) t.scrollIntoView({ block: 'nearest', inline: 'nearest' });
 }
@@ -865,6 +973,8 @@ function act(a){
       saveLocalSoon(); renderAll(); requestAnimationFrame(() => panes.forEach(q => { if (q.L) applyView(q); })); return;
     case 'panel': S.settings.panel = !S.settings.panel; saveLocalSoon(); renderAll(); if (S.settings.panel && p.sel) ensureVisible(p, p.sel); return;
     case 'menu': return mainMenu();
+    case 'quiz': return quizOn(p) ? quizExit() : quizStart();
+    case 'search': return search ? closeSearch() : openSearch();
   }
 }
 $('#layoutSel').addEventListener('change', e => { const map = curMap(); if (!map) return; mutate(map, () => { map.layout = e.target.value; }); fitPane(fp()); e.target.blur(); });
@@ -877,10 +987,180 @@ function updateToolbar(){
   q('notes').setAttribute('aria-pressed', S.settings.showNotes); q('mini').setAttribute('aria-pressed', S.settings.minimap);
   q('split').setAttribute('aria-pressed', S.settings.split); q('panel').setAttribute('aria-pressed', S.settings.panel);
   q('rel').setAttribute('aria-pressed', !!relMode);
+  q('quiz').setAttribute('aria-pressed', quizOn(p)); q('search').setAttribute('aria-pressed', !!search);
   if (map) $('#layoutSel').value = map.layout || 'balanced';
   $('#fsLabel').textContent = Math.round(S.settings.fontScale * 100) + '%';
 }
 window.addEventListener('resize', () => { commitEditor(); panes.forEach(p => { if (p.L) applyView(p); }); });
+
+/* ================= 목차 암기 모드 ================= */
+let quiz = null; // { mapId, revealed:Set, weak:bool }
+function quizOn(p = fp()){ return !!(quiz && p && quiz.mapId === p.mapId); }
+function isHidden(map, n, d){ return !!(quiz && quiz.mapId === map.id && d > 0 && !quiz.revealed.has(n.id) && (!quiz.weak || n.mark === 'x' || n.mark === 't')); }
+function hiddenList(p){ const map = curMap(p), out = []; if (!map || !p.L) return out; for (const [id, b] of p.L) if (isHidden(map, b.n, b.d)) out.push(id); return out; }
+function quizStats(map){ let tot = 0, o = 0, t = 0, x = 0; for (const v of getIndex(map).values()){ if (!v.p) continue; tot++; if (v.n.mark === 'o') o++; else if (v.n.mark === 't') t++; else if (v.n.mark === 'x') x++; } return { tot, o, t, x }; }
+function quizStart(){
+  const p = fp(), map = curMap(p); if (!map) return; commitEditor(); relMode = null;
+  if (!map.root.children.length){ toast('하위 주제가 있어야 암기 모드를 쓸 수 있어요'); return; }
+  quiz = { mapId: map.id, revealed: new Set(), weak: false };
+  p.sel = map.root.id; p.selRel = null; renderAll(); fitPane(p);
+  toast('주제를 떠올린 뒤 탭(또는 Space)해서 확인하고 ⭕△❌로 표시하세요', 3200);
+}
+function quizExit(){ quiz = null; renderAll(); }
+function quizNext(p, dir = 1){
+  const order = [...(p.L ? p.L.keys() : [])], hid = new Set(hiddenList(p)), map = curMap(p);
+  if (!hid.size){ const s = quizStats(map); toast(`모두 확인했어요 · ⭕${s.o} △${s.t} ❌${s.x}`, 3000); renderAll(); return; }
+  const i = Math.max(0, order.indexOf(p.sel));
+  for (let s = 1; s <= order.length; s++){
+    const id = order[((i + dir * s) % order.length + order.length) % order.length];
+    if (hid.has(id)){ p.sel = id; p.selRel = null; renderAll(); centerOn(p, id); return; }
+  }
+}
+function quizRevealOrNext(p){
+  const map = curMap(p), info = p.sel && getIndex(map).get(p.sel);
+  if (info && isHidden(map, info.n, info.d)){ quiz.revealed.add(info.n.id); renderAll(); }
+  else quizNext(p);
+}
+function quizMark(p, v){
+  const map = curMap(p), info = p.sel && getIndex(map).get(p.sel);
+  if (!info || !info.p){ toast('표시할 주제를 선택하세요'); return; }
+  quiz.revealed.add(info.n.id); info.n.mark = v; info.n.markAt = Date.now(); touch(map);
+  quizNext(p);
+}
+function updateQuizBar(){
+  const p = fp(), bar = $('#quizbar'), on = quizOn(p); bar.classList.toggle('on', on); document.body.classList.toggle('quizon', on); if (!on) return;
+  const map = curMap(p), s = quizStats(map), left = hiddenList(p).length;
+  $('#qstat').textContent = `${quiz.weak ? '❌△ 복습' : '목차 암기'} · 남은 빈칸 ${left}개 · ⭕${s.o} △${s.t} ❌${s.x} · 암기율 ${s.tot ? Math.round(s.o / s.tot * 100) : 0}%`;
+  const info = p.sel && getIndex(map).get(p.sel);
+  $('#qReveal').textContent = info && isHidden(map, info.n, info.d) ? '공개' : '다음 빈칸';
+}
+$('#qPrev').onclick = () => quizNext(fp(), -1);
+$('#qNext').onclick = () => quizNext(fp(), 1);
+$('#qReveal').onclick = () => quizRevealOrNext(fp());
+$('#quizbar').addEventListener('click', e => { const b = e.target.closest('[data-mark]'); if (b) quizMark(fp(), b.dataset.mark); });
+$('#qWeak').onclick = () => {
+  const map = curMap(); const s = quizStats(map);
+  if (!s.t && !s.x){ toast('❌·△로 표시한 주제가 없어요'); return; }
+  quiz.weak = true; quiz.revealed.clear(); fp().sel = map.root.id; renderAll(); quizNext(fp());
+};
+$('#qReset').onclick = () => { quiz.weak = false; quiz.revealed.clear(); fp().sel = curMap().root.id; renderAll(); };
+$('#qAll').onclick = () => { for (const id of getIndex(curMap()).keys()) quiz.revealed.add(id); renderAll(); };
+$('#qClear').onclick = async () => {
+  const map = curMap(); if (!(await confirmDlg('이 맵의 ⭕△❌ 기록을 모두 지울까요?', '지우기'))) return;
+  mutate(map, () => { for (const v of getIndex(map).values()){ delete v.n.mark; delete v.n.markAt; } });
+};
+$('#qExit').onclick = quizExit;
+
+/* ================= 검색 · 태그 ================= */
+let search = null; // { q, matches:[], i }
+function openSearch(){
+  if (!search) search = { q: '', matches: [], i: -1 };
+  $('#searchbar').classList.add('on'); renderSearchTags(); updateToolbar();
+  const inp = $('#sInput'); inp.focus(); inp.select();
+}
+function closeSearch(){ search = null; $('#searchbar').classList.remove('on'); $('#sInput').blur(); renderAll(); }
+function runSearch(silent){
+  const map = curMap(); if (!search || !map) return;
+  const terms = search.q.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  search.matches = []; search.i = -1;
+  if (terms.length) for (const [id, v] of getIndex(map)){
+    const n = v.n, hay = ((n.text || '') + '\n' + (n.note || '')).toLowerCase(), tags = (n.tags || []).map(t => t.toLowerCase());
+    if (terms.every(t => t[0] === '#' ? (t.length === 1 ? tags.length > 0 : tags.some(g => g.startsWith(t.slice(1)))) : (hay.includes(t) || tags.some(g => g.includes(t))))) search.matches.push(id);
+  }
+  $('#sCount').textContent = terms.length ? (search.matches.length ? `${search.matches.length}개` : '없음') : '';
+  if (!silent) renderAll();
+}
+function searchGo(d){
+  if (!search || !search.matches.length) return;
+  const p = fp(), map = curMap(p), idx = getIndex(map);
+  search.i = (search.i + d + search.matches.length) % search.matches.length;
+  const id = search.matches[search.i]; const info = idx.get(id); if (!info) return;
+  let q = info.p, changed = false;
+  while (q){ if (q.collapsed){ q.collapsed = false; changed = true; } q = idx.get(q.id).p; }
+  if (changed) touch(map);
+  p.sel = id; p.selRel = null; renderAll(); centerOn(p, id);
+  $('#sCount').textContent = `${search.i + 1}/${search.matches.length}`;
+}
+function renderSearchTags(){
+  const map = curMap(); const cnt = {};
+  if (map) for (const v of getIndex(map).values()) for (const t of v.n.tags || []) cnt[t] = (cnt[t] || 0) + 1;
+  $('#sTags').innerHTML = Object.keys(cnt).sort((a, b) => cnt[b] - cnt[a] || a.localeCompare(b, 'ko')).map(t => `<button class="tagchip" data-tag="${esc(t)}">#${esc(t)} <span class="muted">${cnt[t]}</span></button>`).join('');
+}
+$('#sInput').addEventListener('input', e => { if (!search) return; search.q = e.target.value; runSearch(); });
+$('#sInput').addEventListener('keydown', e => {
+  if (e.isComposing || e.keyCode === 229) return;
+  if (e.key === 'Enter'){ e.preventDefault(); searchGo(e.shiftKey ? -1 : 1); }
+  else if (e.key === 'Escape'){ e.preventDefault(); closeSearch(); }
+});
+$('#sNext').onclick = () => searchGo(1);
+$('#sPrev').onclick = () => searchGo(-1);
+$('#sClose').onclick = closeSearch;
+$('#sTags').addEventListener('click', e => { const b = e.target.closest('[data-tag]'); if (!b) return; $('#sInput').value = '#' + b.dataset.tag; search.q = $('#sInput').value; runSearch(); searchGo(1); });
+function parseTags(s){ const out = []; for (let t of String(s).split(/[\s,]+/)){ t = t.replace(/^#+/, '').trim(); if (t && !out.includes(t)) out.push(t); } return out; }
+
+/* ================= 텍스트(목차) → 맵 ================= */
+const OUTLINE_PATS = [
+  ['roman', /^(?:[IVX]+)\.\s+/], ['n.', /^\d+\.(?!\d)\s*/], ['n)', /^\d+\)\s*/], ['(n)', /^\(\d+\)\s*/],
+  ['circ', /^[①-⑳]\s*/], ['ga.', /^[가-하]\.\s*/], ['ga)', /^[가-하]\)\s*/], ['(ga)', /^\([가-하]\)\s*/],
+  ['a.', /^[a-z]\.\s+/], ['a)', /^[a-z]\)\s+/], ['bullet', /^(?:[-*+•·▪◦○●■□▶►▷✓]|\d+\.\s*\[[ x]\])\s+/]
+];
+function parseOutline(text){
+  const top = { key: -1, n: { children: [] } }, stack = [top], rank = {}; let next = 0, last = null, count = 0;
+  for (const raw of String(text).replace(/\r/g, '').split('\n')){
+    if (!raw.trim()) continue;
+    const ws = raw.match(/^[\t 　]*/)[0]; const indent = ws.replace(/\t/g, '    ').replace(/　/g, '  ').length;
+    let s = raw.slice(ws.length).trim();
+    if (/^(```|---+|\*\*\*+)$/.test(s)) continue;
+    if (s.startsWith('>') && last){ const t = s.replace(/^>\s?/, ''); last.note = (last.note ? last.note + '\n' : '') + t; continue; }
+    let key, text = s; const h = s.match(/^(#{1,6})\s+(.*)$/);
+    if (h){ key = h[1].length; text = h[2]; }
+    else {
+      let type = 'plain';
+      for (const [t, re] of OUTLINE_PATS) if (re.test(s)){ type = t; if (t === 'bullet') text = s.replace(re, ''); break; }
+      if (!(type in rank)) rank[type] = next++;
+      key = 100 + indent * 20 + rank[type];
+    }
+    const tags = [];
+    text = text.replace(/(^|\s)#([^\s#]+)/g, (m0, sp, t) => { tags.push(t); return sp; });
+    text = text.replace(/\*\*(.+?)\*\*/g, '$1').replace(/__(.+?)__/g, '$1').replace(/`([^`]+)`/g, '$1').trim();
+    if (!text) continue;
+    const n = newNode(text); if (tags.length) n.tags = tags; count++;
+    while (stack.length > 1 && stack[stack.length - 1].key >= key) stack.pop();
+    stack[stack.length - 1].n.children.push(n); stack.push({ key, n }); last = n;
+  }
+  return { roots: top.n.children, count };
+}
+function pasteDlg(){
+  const p = fp(), si = selInfo();
+  openModal(`<h3>텍스트로 맵 만들기</h3>
+    <div class="muted" style="margin-bottom:8px;line-height:1.5">목차 · Markdown · 들여쓰기 텍스트를 붙여넣으세요. 들여쓰기, <b>#제목</b>, <b>- •</b> 글머리, <b>Ⅰ. 1. (1) ① 가.</b> 번호 순서로 단계를 알아서 나눠요. <b>&gt;</b> 로 시작하는 줄은 위 주제의 설명, <b>#단어</b>는 태그가 돼요.</div>
+    <textarea id="mTxt" rows="11" placeholder="감정평가의 3방식&#10;1. 원가방식&#10;(1) 원가법&#10;(2) 적산법&#10;2. 비교방식&#10;(1) 거래사례비교법 #빈출&#10;> 사례 선정 → 사정보정 → 시점수정"></textarea>
+    <div id="mPrev" class="muted" style="margin:6px 0 8px"></div>
+    <label style="display:flex;gap:8px;align-items:center;font-size:14px;margin:6px 0"><input type="radio" name="mWhere" value="new" checked> 새 맵(탭)으로 만들기</label>
+    <label style="display:flex;gap:8px;align-items:center;font-size:14px;margin:6px 0;${si ? '' : 'opacity:.4'}"><input type="radio" name="mWhere" value="sel" ${si ? '' : 'disabled'}> 선택한 주제 아래에 추가${si ? ` — “${esc((si.n.text || '').split('\n')[0].slice(0, 20))}”` : ' (주제를 먼저 선택)'}</label>
+    <div class="acts"><button class="btn" id="mNo">취소</button><button class="btn primary" id="mOk">만들기</button></div>`);
+  const ta = $('#mTxt'); ta.focus();
+  const prev = () => { const r = parseOutline(ta.value); $('#mPrev').textContent = r.count ? `주제 ${r.count}개 인식 · 최상위 ${r.roots.length}개` : ''; };
+  ta.addEventListener('input', prev);
+  $('#mNo').onclick = () => closeModal();
+  $('#mOk').onclick = () => {
+    const r = parseOutline(ta.value); if (!r.count){ toast('인식된 주제가 없어요'); return; }
+    const where = $('#modalBox').querySelector('input[name=mWhere]:checked').value;
+    closeModal();
+    if (where === 'sel' && si){
+      const map = si.map, n = si.n;
+      mutate(map, () => { n.collapsed = false; n.children.push(...r.roots); });
+      toast(`주제 ${r.count}개를 추가했어요`);
+    } else {
+      let root;
+      if (r.roots.length === 1) root = r.roots[0];
+      else { root = newNode('붙여넣은 목차'); root.children = r.roots; }
+      const m = newMap((root.text || '목차').split('\n')[0].slice(0, 30)); m.root = root; m.layout = 'right';
+      S.maps[m.id] = m; S.order.push(m.id); indexDirty = true; touch(m); showMap(m.id);
+      toast(`주제 ${r.count}개로 새 맵을 만들었어요`);
+    }
+  };
+}
 
 /* ================= 속성 패널 ================= */
 const pEl = id => document.getElementById(id);
@@ -907,6 +1187,8 @@ function updatePanel(){
   if (ae !== pEl('pText')) pEl('pText').value = n.text || '';
   if (ae !== pEl('pNote')) pEl('pNote').value = n.note || '';
   if (ae !== pEl('pLink')) pEl('pLink').value = n.link || '';
+  if (ae !== pEl('pTags')) pEl('pTags').value = (n.tags || []).map(t => '#' + t).join(' ');
+  pEl('pMark').textContent = n.mark ? `암기 기록: ${{ o: '⭕ 알아', t: '△ 애매', x: '❌ 몰라' }[n.mark]}${n.markAt ? ' · ' + new Date(n.markAt).toLocaleDateString('ko-KR') : ''}` : '';
   const lo = pEl('pLinkOpen'); if (n.link){ lo.href = n.link; lo.style.display = ''; } else lo.style.display = 'none';
   pEl('pColors').querySelectorAll('.sw').forEach(b => b.classList.toggle('on', (b.dataset.color || '') === (n.color || '')));
   pEl('pFs').textContent = Math.round((n.fs || 1) * 100) + '%';
@@ -933,6 +1215,8 @@ liveField('pNote', (si, v) => { if (v.trim()) si.n.note = v; else delete si.n.no
 liveField('pGroupLabel', (si, v) => { if (si.n.group) si.n.group.label = v; });
 liveField('pRelLabel', (si, v) => { si.r.label = v; });
 pEl('pLink').addEventListener('change', () => { const si = selInfo(); if (!si) return; let v = pEl('pLink').value.trim(); if (v && !/^[a-z][a-z0-9+.-]*:/i.test(v)) v = 'https://' + v; mutate(si.map, () => { if (v) si.n.link = v; else delete si.n.link; }); });
+pEl('pTags').addEventListener('change', () => { const si = selInfo(); if (!si) return; const t = parseTags(pEl('pTags').value); if (t.join(' ') === (si.n.tags || []).join(' ')) return; mutate(si.map, () => { if (t.length) si.n.tags = t; else delete si.n.tags; }); if (search) renderSearchTags(); });
+pEl('pTags').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.isComposing){ e.preventDefault(); pEl('pTags').blur(); } });
 pEl('pColors').addEventListener('click', e => { const b = e.target.closest('.sw'); if (!b) return; const si = selInfo(); if (!si) return; mutate(si.map, () => { if (b.dataset.color) si.n.color = b.dataset.color; else delete si.n.color; }); });
 pEl('pColorCustom').addEventListener('change', e => { const si = selInfo(); if (!si) return; mutate(si.map, () => { si.n.color = e.target.value; }); });
 const setNodeFs = f => { const si = selInfo(); if (!si) return; mutate(si.map, () => { const v = Math.round(clamp(f(si.n.fs || 1), 0.6, 3) * 10) / 10; if (v === 1) delete si.n.fs; else si.n.fs = v; }); };
@@ -1019,6 +1303,7 @@ function mainMenu(){
     { label: '{ } JSON (.json)', fn: () => exportJSON(false) },
     { label: '💾 전체 백업 — 모든 맵 JSON', fn: () => exportJSON(true) },
     { hd: '가져오기' },
+    { label: '📋 텍스트로 맵 만들기 (목차 붙여넣기)', fn: pasteDlg },
     { label: '📥 XMind (.xmind) / JSON 불러오기', fn: () => pEl('fImport').click() },
     { hd: '기타' },
     { label: '⌨ 단축키 · 사용법', fn: helpDlg },
@@ -1026,7 +1311,7 @@ function mainMenu(){
   ]);
 }
 function helpDlg(){
-  const rows = [['Tab','자식 주제 추가'],['Enter','형제 주제 추가'],['F2 / Space / 더블탭','주제 편집 (바로 타이핑해도 편집 시작)'],['Shift+Enter','편집 중 줄바꿈'],['Esc','편집 취소 · 선택 해제'],['Delete','주제/관계선 삭제'],['방향키','주제 이동'],['Ctrl+Z / Ctrl+Shift+Z','실행 취소 / 다시 실행'],['Ctrl+0','화면 맞춤'],['Ctrl+휠 · 두 손가락 핀치','확대/축소'],['드래그 (빈 곳)','화면 이동'],['선택된 주제 드래그','순서·부모 변경 (위/아래 = 형제, 가운데 = 자식)'],['활성 탭 다시 탭','맵 이름 변경·복제·삭제']];
+  const rows = [['Tab','자식 주제 추가'],['Enter','형제 주제 추가'],['F2 / Space / 더블탭','주제 편집 (바로 타이핑해도 편집 시작)'],['Shift+Enter','편집 중 줄바꿈'],['Esc','편집 취소 · 선택 해제'],['Delete','주제/관계선 삭제'],['방향키','주제 이동'],['Ctrl+Z / Ctrl+Shift+Z','실행 취소 / 다시 실행'],['Ctrl+0','화면 맞춤'],['Ctrl+휠 · 두 손가락 핀치','확대/축소'],['드래그 (빈 곳)','화면 이동'],['선택된 주제 드래그','순서·부모 변경 (위/아래 = 형제, 가운데 = 자식)'],['활성 탭 다시 탭','맵 이름 변경·복제·삭제'],['Ctrl+F','검색 (#태그로 태그 검색, Enter 다음 결과)'],['🧠 암기 모드','Space 공개/다음 빈칸 · 1 ⭕ · 2 △ · 3 ❌ · Esc 종료'],['⋯ 메뉴 → 텍스트로 맵','목차를 붙여넣어 자동으로 맵 생성']];
   openModal(`<h3>단축키 · 사용법</h3><table>${rows.map(r => `<tr><td>${esc(r[0])}</td><td>${esc(r[1])}</td></tr>`).join('')}</table><div class="acts"><button class="btn" id="mNo">닫기</button></div>`);
   $('#mNo').onclick = () => closeModal();
 }
@@ -1155,7 +1440,7 @@ function exportMD(){
   if (map.root.note) out.push('', ...map.root.note.trim().split('\n').map(l => '> ' + l));
   if (map.root.link) out.push('', `[링크](${map.root.link})`);
   out.push('');
-  (function walk(n, d){ for (const c of n.children){ const ind = '  '.repeat(d); let line = ind + '- ' + one(c.text); if (c.link) line += ` ([링크](${c.link}))`; out.push(line); if (c.note) c.note.trim().split('\n').forEach(l => out.push(ind + '  > ' + l)); walk(c, d + 1); } })(map.root, 0);
+  (function walk(n, d){ for (const c of n.children){ const ind = '  '.repeat(d); let line = ind + '- ' + one(c.text); if (c.tags) line += ' ' + c.tags.map(t => '#' + t).join(' '); if (c.link) line += ` ([링크](${c.link}))`; out.push(line); if (c.note) c.note.trim().split('\n').forEach(l => out.push(ind + '  > ' + l)); walk(c, d + 1); } })(map.root, 0);
   if ((map.relations || []).length){ out.push('', '## 관계선'); for (const r of map.relations){ const a = idx.get(r.from), b = idx.get(r.to); if (a && b) out.push(`- ${one(a.n.text)} → ${one(b.n.text)}${r.label ? ': ' + r.label : ''}`); } }
   saveFile(safeName(map.name) + '.md', out.join('\n') + '\n');
 }
@@ -1221,12 +1506,12 @@ function sheetXML(rows, widths){
 function exportXLSX(){
   const map = curMap(); if (!map) return; const idx = getIndex(map);
   let maxD = 0; for (const v of idx.values()) maxD = Math.max(maxD, v.d);
-  const head = [...Array(maxD + 1)].map((_, i) => i === 0 ? '중심 주제' : `레벨 ${i}`).concat(['설명(노트)', '링크']);
+  const head = [...Array(maxD + 1)].map((_, i) => i === 0 ? '중심 주제' : `레벨 ${i}`).concat(['설명(노트)', '링크', '태그', '암기']);
   const rows = [head];
-  (function walk(n, d){ const r = Array(maxD + 3).fill(''); r[d] = n.text || ''; r[maxD + 1] = n.note || ''; r[maxD + 2] = n.link || ''; rows.push(r); n.children.forEach(c => walk(c, d + 1)); })(map.root, 0);
+  (function walk(n, d){ const r = Array(maxD + 5).fill(''); r[d] = n.text || ''; r[maxD + 1] = n.note || ''; r[maxD + 2] = n.link || ''; r[maxD + 3] = (n.tags || []).map(t => '#' + t).join(' '); r[maxD + 4] = { o: '⭕', t: '△', x: '❌' }[n.mark] || ''; rows.push(r); n.children.forEach(c => walk(c, d + 1)); })(map.root, 0);
   const rrows = [['시작 주제', '대상 주제', '라벨']];
   for (const r of map.relations || []){ const a = idx.get(r.from), b = idx.get(r.to); if (a && b) rrows.push([a.n.text, b.n.text, r.label || '']); }
-  const ws = [...Array(maxD + 1)].map(() => 22).concat([40, 30]);
+  const ws = [...Array(maxD + 1)].map(() => 22).concat([40, 30, 18, 8]);
   const files = [
     { name: '[Content_Types].xml', data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/worksheets/sheet2.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/></Types>` },
     { name: '_rels/.rels', data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>` },
@@ -1280,6 +1565,7 @@ async function importXMind(buf){
       const conv = t => { const n = newNode((t.title || '').replace(/\r/g, '')); ids[t.id] = n.id;
         const note = t.notes && t.notes.plain && t.notes.plain.content; if (note && note.trim()) n.note = note.replace(/\r/g, '');
         if (t.href && /^https?:/i.test(t.href)) n.link = t.href;
+        if (Array.isArray(t.labels) && t.labels.length) n.tags = parseTags(t.labels.join(' '));
         const ch = t.children || {}; n.children = (ch.attached || []).map(conv).concat((ch.detached || []).map(conv));
         if (t.branch === 'folded') n.collapsed = true; return n; };
       const m = newMap(sh.title || '시트'); m.root = conv(sh.rootTopic); m.layout = 'balanced';
@@ -1296,6 +1582,7 @@ async function importXMind(buf){
         const note = kid(kid(t, 'notes'), 'plain')?.textContent; if (note && note.trim()) n.note = note.replace(/\r/g, '');
         const href = t.getAttributeNS('http://www.w3.org/1999/xlink', 'href') || t.getAttribute('xlink:href'); if (href && /^https?:/i.test(href)) n.link = href;
         if (t.getAttribute('branch') === 'folded') n.collapsed = true;
+        const labs = kids(kid(t, 'labels'), 'label').map(l => l.textContent); if (labs.length) n.tags = parseTags(labs.join(' '));
         const ch = kid(t, 'children'); n.children = [];
         for (const tp of kids(ch, 'topics')) for (const c of kids(tp, 'topic')) n.children.push(conv(c));
         return n; };
